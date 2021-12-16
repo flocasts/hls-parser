@@ -12,14 +12,67 @@ import {
   Segment,
   PartialSegment,
   PrefetchSegment,
-  RenditionReport
+  RenditionReport,
+  ByteRange,
+  Resolution
 } from './types';
+
+export type TagName =
+  // Basic
+  'EXTM3U' |
+  'EXT-X-VERSION' |
+  // Segment
+  'EXTINF' |
+  'EXT-X-BYTERANGE' |
+  'EXT-X-DISCONTINUITY' |
+  'EXT-X-PREFETCH-DISCONTINUITY' |
+  'EXT-X-KEY' |
+  'EXT-X-MAP' |
+  'EXT-X-PROGRAM-DATE-TIME' |
+  'EXT-X-DATERANGE' |
+  'EXT-X-CUE-OUT' |
+  'EXT-X-CUE-IN' |
+  'EXT-X-CUE-OUT-CONT' |
+  'EXT-X-CUE' |
+  'EXT-OATCLS-SCTE35' |
+  'EXT-X-ASSET' |
+  'EXT-X-SCTE35' |
+  'EXT-X-PART' |
+  'EXT-X-PRELOAD-HINT' |
+  // MediaPlaylist
+  'EXT-X-TARGETDURATION' |
+  'EXT-X-MEDIA-SEQUENCE' |
+  'EXT-X-DISCONTINUITY-SEQUENCE' |
+  'EXT-X-ENDLIST' |
+  'EXT-X-PLAYLIST-TYPE' |
+  'EXT-X-I-FRAMES-ONLY' |
+  'EXT-X-SERVER-CONTROL' |
+  'EXT-X-PART-INF' |
+  'EXT-X-PREFETCH' |
+  'EXT-X-RENDITION-REPORT' |
+  'EXT-X-SKIP' |
+  // MasterPlaylist
+  'EXT-X-MEDIA' |
+  'EXT-X-STREAM-INF' |
+  'EXT-X-I-FRAME-STREAM-INF' |
+  'EXT-X-SESSION-DATA' |
+  'EXT-X-SESSION-KEY' |
+  // MediaorMasterPlaylist
+  'EXT-X-INDEPENDENT-SEGMENTS' |
+  'EXT-X-START'
+
+export type TagCategory = 'Basic' | 'Segment' | 'MediaPlaylist' | 'MasterPlaylist' | 'MediaorMasterPlaylist' | 'Unknown'
+
+export interface ExtInf {
+  duration: number;
+  title: string;
+}
 
 function unquote(str) {
   return utils.trim(str, '"');
 }
 
-function getTagCategory(tagName) {
+function getTagCategory(tagName: TagName | string): TagCategory {
   switch (tagName) {
     case 'EXTM3U':
     case 'EXT-X-VERSION':
@@ -68,28 +121,33 @@ function getTagCategory(tagName) {
   }
 }
 
-function parseEXTINF(param) {
+export interface AllowedCpc {
+  format: string;
+  cpcList: string[]
+}
+
+function parseEXTINF(param: string): ExtInf {
   const pair = utils.splitAt(param, ',');
   return {duration: utils.toNumber(pair[0]), title: decodeURIComponent(escape(pair[1]))};
 }
 
-function parseBYTERANGE(param) {
+function parseBYTERANGE(param: string): ByteRange {
   const pair = utils.splitAt(param, '@');
   return {length: utils.toNumber(pair[0]), offset: pair[1] ? utils.toNumber(pair[1]) : -1};
 }
 
-function parseResolution(str) {
+function parseResolution(str: string): Resolution {
   const pair = utils.splitAt(str, 'x');
   return {width: utils.toNumber(pair[0]), height: utils.toNumber(pair[1])};
 }
 
-function parseAllowedCpc(str) {
-  const message = 'ALLOWED-CPC: Each entry must consit of KEYFORMAT and Content Protection Configuration';
+function parseAllowedCpc(str: string): AllowedCpc[] {
+  const message = 'ALLOWED-CPC: Each entry must consist of KEYFORMAT and Content Protection Configuration';
   const list = str.split(',');
   if (list.length === 0) {
     utils.INVALIDPLAYLIST(message);
   }
-  const allowedCpcList = [];
+  const allowedCpcList: AllowedCpc[] = [];
   for (const item of list) {
     const [format, cpcText] = utils.splitAt(item, ':');
     if (!format || !cpcText) {
@@ -101,7 +159,7 @@ function parseAllowedCpc(str) {
   return allowedCpcList;
 }
 
-function parseIV(str) {
+function parseIV(str: string): Buffer {
   const iv = utils.hexToByteSequence(str);
   if (iv.length !== 16) {
     utils.INVALIDPLAYLIST('IV must be a 128-bit unsigned integer');
