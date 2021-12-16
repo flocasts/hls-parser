@@ -5,7 +5,7 @@ export interface HlsParserOptions {
 
 let options: HlsParserOptions = {};
 
-function THROW(err: Error) {
+export function THROW(err: Error) {
   if (!options.strictMode) {
     if (!options.silent) {
       console.error(err.message);
@@ -15,7 +15,7 @@ function THROW(err: Error) {
   throw err;
 }
 
-function ASSERT(msg, ...options: [string, ...boolean[]]): void {
+export function ASSERT(msg, ...options: [string, ...boolean[]]): void {
   for (const [index, param] of options.entries()) {
     if (!param) {
       THROW(new Error(`${msg} : Failed at [${index}]`));
@@ -23,7 +23,7 @@ function ASSERT(msg, ...options: [string, ...boolean[]]): void {
   }
 }
 
-function CONDITIONALASSERT(...options: [boolean, any][]): void {
+export function CONDITIONALASSERT(...options: [boolean, any][]): void {
   for (const [index, [cond, param]] of options.entries()) {
     if (!cond) {
       continue;
@@ -34,7 +34,7 @@ function CONDITIONALASSERT(...options: [boolean, any][]): void {
   }
 }
 
-function PARAMCHECK(...options: boolean[]): void {
+export function PARAMCHECK(...options: boolean[]): void {
   for (const [index, param] of options.entries()) {
     if (param === undefined) {
       THROW(new Error(`Param Check : Failed at [${index}]`));
@@ -42,7 +42,7 @@ function PARAMCHECK(...options: boolean[]): void {
   }
 }
 
-function CONDITIONALPARAMCHECK(...options: [boolean, any][]): void {
+export function CONDITIONALPARAMCHECK(...options: [boolean, any][]): void {
   for (const [index, [cond, param]] of options.entries()) {
     if (!cond) {
       continue;
@@ -53,11 +53,11 @@ function CONDITIONALPARAMCHECK(...options: [boolean, any][]): void {
   }
 }
 
-function INVALIDPLAYLIST(msg: string): void {
+export function INVALIDPLAYLIST(msg: string): void {
   THROW(new Error(`Invalid Playlist : ${msg}`));
 }
 
-function toNumber(str: string, radix = 10): number {
+export function toNumber(str: string, radix = 10): number {
   if (typeof str === 'number') {
     return str;
   }
@@ -68,7 +68,7 @@ function toNumber(str: string, radix = 10): number {
   return num;
 }
 
-function hexToByteSequence(str: string): Buffer {
+export function hexToByteSequence(str: string): Buffer {
   if (str.startsWith('0x') || str.startsWith('0X')) {
     str = str.slice(2);
   }
@@ -79,7 +79,7 @@ function hexToByteSequence(str: string): Buffer {
   return Buffer.from(numArray);
 }
 
-function byteSequenceToHex(sequence: Buffer, start = 0, end = sequence.length): string {
+export function byteSequenceToHex(sequence: Buffer, start = 0, end = sequence.length): string {
   if (end <= start) {
     THROW(new Error(`end must be larger than start : start=${start}, end=${end}`));
   }
@@ -93,7 +93,7 @@ function byteSequenceToHex(sequence: Buffer, start = 0, end = sequence.length): 
 export type BodyHandler = () => string
 export type ErrorHandler = (Error) => void
 
-function tryCatch(body: () => string, errorHandler: ErrorHandler): ReturnType<BodyHandler | ErrorHandler> {
+export function tryCatch(body: () => string, errorHandler: ErrorHandler): ReturnType<BodyHandler | ErrorHandler> {
   try {
     return body();
   } catch (err) {
@@ -101,7 +101,7 @@ function tryCatch(body: () => string, errorHandler: ErrorHandler): ReturnType<Bo
   }
 }
 
-function splitAt(str:string, delimiter: string, index = 0): string[] | [string] {
+export function splitAt(str:string, delimiter: string, index = 0): string[] | [string] {
   let lastDelimiterPos: number = -1;
   for (let i = 0, j = 0; i < str.length; i++) {
     if (str[i] === delimiter) {
@@ -117,7 +117,7 @@ function splitAt(str:string, delimiter: string, index = 0): string[] | [string] 
   return [str];
 }
 
-function trim(str: string, char = ' '): string {
+export function trim(str: string, char = ' '): string {
   if (!str) {
     return str;
   }
@@ -134,7 +134,7 @@ function trim(str: string, char = ' '): string {
   return str;
 }
 
-function splitByCommaWithPreservingQuotes(str: string): string[] {
+export function splitByCommaWithPreservingQuotes(str: string): string[] {
   const list: string[] = [];
   let doParse: boolean = true;
   let start: number = 0;
@@ -162,7 +162,7 @@ function splitByCommaWithPreservingQuotes(str: string): string[] {
   return list;
 }
 
-function camelify(str): string {
+export function camelify(str): string {
   const array: string[] = [];
   let nextUpper: boolean = false;
   for (const ch of str) {
@@ -180,7 +180,7 @@ function camelify(str): string {
   return array.join('');
 }
 
-function formatDate(date: Date): string {
+export function formatDate(date: Date): string {
   const YYYY = date.getUTCFullYear();
   const MM = ('0' + (date.getUTCMonth() + 1)).slice(-2);
   const DD = ('0' + date.getUTCDate()).slice(-2);
@@ -192,35 +192,14 @@ function formatDate(date: Date): string {
 }
 
 type Callable = (...any:any[]) => any
-function hasOwnProp<T extends Record<string, Callable>, K extends keyof T>(obj: T, propName: K): ReturnType<T[K]> {
+export function hasOwnProp<T extends Record<string, Callable>, K extends keyof T>(obj: T, propName: K): ReturnType<T[K]> {
   return Object.hasOwnProperty.call(obj, propName);
 }
 
-function setOptions(newOptions = {}) {
+export function setOptions(newOptions = {}): void {
   options = Object.assign(options, newOptions);
 }
 
-function getOptions() {
+export function getOptions(): HlsParserOptions {
   return Object.assign({}, options);
 }
-
-module.exports = {
-  THROW,
-  ASSERT,
-  CONDITIONALASSERT,
-  PARAMCHECK,
-  CONDITIONALPARAMCHECK,
-  INVALIDPLAYLIST,
-  toNumber,
-  hexToByteSequence,
-  byteSequenceToHex,
-  tryCatch,
-  splitAt,
-  trim,
-  splitByCommaWithPreservingQuotes,
-  camelify,
-  formatDate,
-  hasOwnProp,
-  setOptions,
-  getOptions
-};
