@@ -1,5 +1,17 @@
 const utils = require('./utils');
 
+export interface LowLatencyCompatibility {
+  canBlockReload: boolean,
+  canSkipUntil: boolean,
+  holdBack: boolean,
+  partHoldBack: boolean,
+}
+
+export interface ByteRange {
+  length: number,
+  offset: number,
+}
+
 export interface RenditionProperties {
   type: string;
   uri: string;
@@ -100,7 +112,7 @@ export interface VariantProperties {
   audio: string[];
   video: string[];
   subtitles: string[];
-  closedCaptions: string[];
+  closedCaptions: Rendition[];
   currentRenditions: VariantCurrentRendition;
 }
 
@@ -130,7 +142,7 @@ export class Variant implements VariantProperties {
   public audio: string[];
   public video: string[];
   public subtitles: string[];
-  public closedCaptions: string[];
+  public closedCaptions: Rendition[];
   public currentRenditions: VariantCurrentRendition;
 
   constructor({
@@ -247,7 +259,7 @@ export interface MediaInitializationSectionProperties {
   hint: boolean;
   uri: string;
   mimeType: string;
-  byterange: string;
+  byterange: ByteRange;
 }
 
 export type MediaInitializationSectionOptionalConstructorProperties = Partial<Pick<MediaInitializationSectionProperties,
@@ -260,7 +272,7 @@ export class MediaInitializationSection implements MediaInitializationSectionPro
   public hint: boolean;
   public uri: any;
   public mimeType: any;
-  public byterange: any;
+  public byterange: ByteRange;
   constructor({
     hint = false,
     uri, // required
@@ -373,12 +385,17 @@ export class Data {
   }
 }
 
+export interface PlaylistStart {
+  offset: number,
+  precise: boolean,
+}
+
 export interface PlaylistProperties extends Data {
   isMasterPlaylist: boolean;
   uri: string;
   version: string;
   independentSegments: boolean;
-  start: string;
+  start: PlaylistStart;
   source: string;
 }
 
@@ -393,7 +410,7 @@ export class Playlist extends Data implements PlaylistProperties {
   public uri: string;
   public version: string;
   public independentSegments: boolean;
-  public start: string;
+  public start: PlaylistStart;
   public source: string;
 
   constructor({
@@ -419,7 +436,7 @@ export interface MasterPlaylistProperties extends PlaylistProperties {
   variants: Variant[];
   currentVariant: Variant;
   sessionDataList: SessionData[];
-  sessionKeyList: string[];
+  sessionKeyList: Key[];
 }
 export type MasterPlaylistOptionalConstructorProperties = Partial<Pick<MasterPlaylistProperties,
   'variants' | 'currentVariant' | 'sessionDataList' | 'sessionKeyList'
@@ -430,7 +447,7 @@ export class MasterPlaylist extends Playlist implements MasterPlaylistProperties
   public variants: Variant[];
   public currentVariant: Variant;
   public sessionDataList: SessionData[];
-  public sessionKeyList: string[];
+  public sessionKeyList: Key[];
 
   constructor(params: MasterPlaylistConstructorProperties = {}) {
     (params as PlaylistConstructorProperties).isMasterPlaylist = true;
@@ -457,7 +474,7 @@ export interface MediaPlaylistProperties extends PlaylistProperties {
   isIFrame: boolean;
   segments: Segment[];
   prefetchSegments: PrefetchSegment[];
-  lowLatencyCompatibility: boolean;
+  lowLatencyCompatibility: LowLatencyCompatibility;
   partTargetDuration: number;
   renditionReports: RenditionReport[];
   skip: number;
@@ -481,7 +498,7 @@ export class MediaPlaylist extends Playlist implements MediaPlaylistProperties {
   public isIFrame: boolean;
   public segments: Segment[];
   public prefetchSegments: PrefetchSegment[];
-  public lowLatencyCompatibility: boolean;
+  public lowLatencyCompatibility: LowLatencyCompatibility;
   public partTargetDuration: number;
   public renditionReports: RenditionReport[];
   public skip: number;
@@ -527,25 +544,24 @@ export interface SegmentProperties extends Data {
   data: string;
   duration: number;
   title: string;
-  byterange: string;
+  byterange: ByteRange;
   discontinuity: boolean;
   mediaSequenceNumber: number;
   discontinuitySequence: number;
-  key: string;
-  map: string;
+  key: Key;
+  map: MediaInitializationSection;
   programDateTime: Date;
   dateRange: DateRange;
   markers: SpliceInfo[];
-  parts: string[];
+  parts: PartialSegment[];
 }
 
 export type SegmentOptionalConstructorProperties = Partial<Pick<SegmentProperties,
   'mediaSequenceNumber' | 'discontinuitySequence' | 'markers' | 'parts' |
   'uri' | 'mimeType' | 'data' | 'title' | 'byterange' | 'discontinuity' |
-  'key' | 'map' | 'programDateTime' | 'dateRange'
+  'key' | 'map' | 'programDateTime' | 'dateRange' | 'duration'
 >>
-export type SegmentRequiredConstructorProperties = Pick<SegmentProperties, 'duration' >
-export type SegmentConstructorProperties = SegmentOptionalConstructorProperties & SegmentRequiredConstructorProperties
+export type SegmentConstructorProperties = SegmentOptionalConstructorProperties
 
 export class Segment extends Data implements SegmentProperties {
   public uri: string;
@@ -553,16 +569,16 @@ export class Segment extends Data implements SegmentProperties {
   public data: string;
   public duration: number;
   public title: string;
-  public byterange: string;
+  public byterange: ByteRange;
   public discontinuity: boolean;
   public mediaSequenceNumber: number;
   public discontinuitySequence: number;
-  public key: string;
-  public map: string;
+  public key: Key;
+  public map: MediaInitializationSection;
   public programDateTime: Date;
   public dateRange: DateRange;
   public markers: SpliceInfo[];
-  public parts: string[];
+  public parts: PartialSegment[];
 
   constructor({
     uri,
@@ -649,7 +665,7 @@ export interface PrefetchSegmentProperties extends Data {
   discontinuity: boolean;
   mediaSequenceNumber: number;
   discontinuitySequence: number;
-  key: string;
+  key: Key;
 }
 
 export type PrefetchSegmentOptionalConstructorProperties = Partial<Pick<PrefetchSegmentProperties,
@@ -664,7 +680,7 @@ export class PrefetchSegment extends Data implements PrefetchSegmentProperties {
   public discontinuity: boolean;
   public mediaSequenceNumber: number;
   public discontinuitySequence: number;
-  public key: string;
+  public key: Key;
 
   constructor({
     uri, // required
