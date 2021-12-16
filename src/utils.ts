@@ -24,7 +24,7 @@ export function ASSERT(msg, ...options: boolean[]): void {
     }
 }
 
-export function CONDITIONALASSERT(...options: [boolean, any][]): void {
+export function CONDITIONALASSERT(...options: [unknown, any][]): void {
     for (const [index, [cond, param]] of options.entries()) {
         if (!cond) {
             continue;
