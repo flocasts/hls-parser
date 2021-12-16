@@ -2,13 +2,13 @@
   "name": "hls-parser",
   "version": "0.10.4",
   "description": "A simple library to read/write HLS playlists",
-  "main": "index.js",
+  "main": "dist/index.js",
   "browser": "dist/hls-parser.min.js",
   "scripts": {
     "lint": "xo",
     "audit": "npm audit --audit-level high",
     "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
-    "build": "rm -fR ./dist; webpack --mode development ; webpack --mode production",
+    "build": "rm -rf ./dist && tsc",
     "test": "npm run lint && npm run build && npm run audit && ava --verbose"
   },
   "repository": {
@@ -75,5 +75,8 @@
         "node": {}
       }
     }
+  },
+  "dependencies": {
+    "typescript": "^4.5.4"
   }
 }
