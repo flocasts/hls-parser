@@ -393,7 +393,7 @@ export interface PlaylistStart {
 export interface PlaylistProperties extends Data {
   isMasterPlaylist: boolean;
   uri: string;
-  version: string;
+  version: number;
   independentSegments: boolean;
   start: PlaylistStart;
   source: string;
@@ -408,7 +408,7 @@ export type PlaylistConstructorProperties = PlaylistOptionalConstructorPropertie
 export class Playlist extends Data implements PlaylistProperties {
   public isMasterPlaylist: boolean;
   public uri: string;
-  public version: string;
+  public version: number;
   public independentSegments: boolean;
   public start: PlaylistStart;
   public source: string;
