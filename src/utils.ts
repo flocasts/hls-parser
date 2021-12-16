@@ -1,6 +1,7 @@
 export interface HlsParserOptions {
   strictMode?: boolean;
   silent?: boolean;
+  allowClosedCaptionsNone?: boolean;
 }
 
 let options: HlsParserOptions = {};
@@ -15,7 +16,7 @@ export function THROW(err: Error) {
   throw err;
 }
 
-export function ASSERT(msg, ...options: [string, ...boolean[]]): void {
+export function ASSERT(msg, ...options: boolean[]): void {
   for (const [index, param] of options.entries()) {
     if (!param) {
       THROW(new Error(`${msg} : Failed at [${index}]`));
