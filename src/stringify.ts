@@ -1,4 +1,5 @@
-const utils = require('./utils');
+import { Key } from './types';
+import * as utils from './utils'
 
 const ALLOW_REDUNDANCY = [
   '#EXTINF',
@@ -16,13 +17,14 @@ const SKIP_IF_REDUNDANT = [
 ];
 
 class LineArray extends Array {
+  public baseUri: string
   constructor(baseUri) {
     super();
     this.baseUri = baseUri;
-  }
+}
 
   // @override
-  push(...elems) {
+  push(...elems): number {
     // redundancy check
     for (const elem of elems) {
       if (!elem.startsWith('#')) {
@@ -39,12 +41,12 @@ class LineArray extends Array {
         }
         utils.INVALIDPLAYLIST(`Redundant item (${elem})`);
       }
-      super.push(elem);
+      return super.push(elem);
     }
   }
 }
 
-function buildDecimalFloatingNumber(num, fixed) {
+function buildDecimalFloatingNumber(num: number, fixed?: number) {
   let roundFactor = 1000;
   if (fixed) {
     roundFactor = 10 ** fixed;
@@ -87,7 +89,7 @@ function buildSessionData(sessionData) {
   return `#EXT-X-SESSION-DATA:${attrs.join(',')}`;
 }
 
-function buildKey(key, isSessionKey) {
+function buildKey(key: Key, isSessionKey?: boolean) {
   const name = isSessionKey ? '#EXT-X-SESSION-KEY' : '#EXT-X-KEY';
   const attrs = [`METHOD=${key.method}`];
   if (key.uri) {
