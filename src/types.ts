@@ -338,10 +338,12 @@ export class DateRange implements DateRangeProperties{
   }
 }
 
+export type SpliceTypes = 'OUT' | 'IN' | 'RAW'; 
+export type SpliceTagNames = 'EXT-X-CUE-OUT-CONT' | 'EXT-X-CUE-OUT-CONT' | 'EXT-OATCLS-SCTE35' | 'EXT-X-ASSET' | 'EXT-X-SCTE35'; 
 export interface SpliceInfoProperties {
-  type: string;
+  type: SpliceTypes;
   duration: number;
-  tagName: string;
+  tagName: SpliceTagNames
   value: string;
 }
 
@@ -356,9 +358,9 @@ export type SpliceInfoRequiredConstructorProperties = Pick<
 export type SpliceInfoConstructorProperties = SpliceInfoOptionsalConstructorProperties & SpliceInfoRequiredConstructorProperties
 
 export class SpliceInfo implements SpliceInfoProperties {
-  public type: string;
+  public type: SpliceTypes;
   public duration: number;
-  public tagName: string;
+  public tagName: SpliceTagNames;
   public value: string;
 
   constructor({
