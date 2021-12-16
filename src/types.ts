@@ -12,6 +12,11 @@ export interface ByteRange {
   offset: number,
 }
 
+export interface Resolution {
+  width: number;
+  height: number;
+}
+
 export interface RenditionProperties {
   type: string;
   uri: string;
@@ -84,11 +89,6 @@ export class Rendition implements RenditionProperties {
   }
 }
 
-export interface VariantResolution {
-  width: number;
-  height: number;
-}
-
 export interface VariantCurrentRendition {
   audio: number;
   video: number;
@@ -103,7 +103,7 @@ export interface VariantProperties {
   averageBandwidth: number;
   score: number;
   codecs: string[];
-  resolution: VariantResolution;
+  resolution: Resolution;
   frameRate: number;
   hdcpLevel: string;
   allowedCpc: boolean;
@@ -133,7 +133,7 @@ export class Variant implements VariantProperties {
   public averageBandwidth: number;
   public score: number;
   public codecs: string[];
-  public resolution: VariantResolution;
+  public resolution: Resolution;
   public frameRate: number;
   public hdcpLevel: string;
   public allowedCpc: boolean;
@@ -220,7 +220,7 @@ export class SessionData implements SessionDataProperties {
 export interface KeyProperties {
   method: string
   uri: string
-  iv: string
+  iv: Buffer
   format: string
   formatVersion: string
 }
@@ -234,7 +234,7 @@ export type KeyConstructorProperties = KeyOptionalConstructorProperties & KeyReq
 export class Key implements KeyProperties {
   public method: string;
   public uri: string;
-  public iv: string;
+  public iv: Buffer;
   public format: string;
   public formatVersion: string;
   constructor({
