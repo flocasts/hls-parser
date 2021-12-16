@@ -68,6 +68,18 @@ export interface ExtInf {
   title: string;
 }
 
+export type AttributeTypes = string | number | boolean | Buffer | Date | ByteRange | Resolution | AllowedCpc[];
+export type Attributes = Record<string, AttributeTypes>  
+
+export type TagParams =
+  [null, null] |
+  [number, null] |
+  [null, Attributes] |
+  [ExtInf, null] |
+  [ByteRange, null] |
+  ['EVENT' | 'VOID', null] |
+  [unknown, null]
+
 function unquote(str) {
   return utils.trim(str, '"');
 }
@@ -167,7 +179,7 @@ function parseIV(str: string): Buffer {
   return iv;
 }
 
-function parseUserAttribute(str) {
+function parseUserAttribute(str: string): string | number | Buffer {
   if (str.startsWith('"')) {
     return unquote(str);
   }
@@ -177,7 +189,7 @@ function parseUserAttribute(str) {
   return utils.toNumber(str);
 }
 
-function setCompatibleVersionOfKey(params, attributes) {
+function setCompatibleVersionOfKey(params, attributes): void {
   if (attributes['IV'] && params.compatibleVersion < 2) {
     params.compatibleVersion = 2;
   }
@@ -186,8 +198,8 @@ function setCompatibleVersionOfKey(params, attributes) {
   }
 }
 
-function parseAttributeList(param) {
-  const attributes = {};
+function parseAttributeList(param: string): Attributes {
+  const attributes: Attributes = {};
   for (const item of utils.splitByCommaWithPreservingQuotes(param)) {
     const [key, value] = utils.splitAt(item, '=');
     const val = unquote(value);
@@ -255,7 +267,7 @@ function parseAttributeList(param) {
   return attributes;
 }
 
-function parseTagParam(name, param) {
+function parseTagParam(name: TagName, param: string): TagParams {
   switch (name) {
     case 'EXTM3U':
     case 'EXT-X-DISCONTINUITY':
@@ -306,16 +318,16 @@ function parseTagParam(name, param) {
   }
 }
 
-function MIXEDTAGS() {
+function MIXEDTAGS(): void {
   utils.INVALIDPLAYLIST(`The file contains both media and master playlist tags.`);
 }
 
-function splitTag(line) {
+function splitTag(line: string): [TagName, null] | [TagName, string] {
   const index = line.indexOf(':');
   if (index === -1) {
-    return [line.slice(1).trim(), null];
+    return [line.slice(1).trim() as TagName, null];
   }
-  return [line.slice(1, index).trim(), line.slice(index + 1).trim()];
+  return [line.slice(1, index).trim() as TagName, line.slice(index + 1).trim()];
 }
 
 function parseRendition({attributes}) {
