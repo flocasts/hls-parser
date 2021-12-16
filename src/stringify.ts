@@ -433,7 +433,7 @@ function buildParts(lines, parts) {
   return hint;
 }
 
-function stringify(playlist) {
+export function stringify(playlist) {
   utils.PARAMCHECK(playlist);
   utils.ASSERT('Not a playlist', playlist.type === 'playlist');
   const lines = new LineArray(playlist.uri);
@@ -458,4 +458,3 @@ function stringify(playlist) {
   return lines.join('\n');
 }
 
-module.exports = stringify;

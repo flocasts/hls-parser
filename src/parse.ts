@@ -77,6 +77,8 @@ export type TagName =
   'EXT-X-INDEPENDENT-SEGMENTS' |
   'EXT-X-START'
 
+export type LexicalLines = [Tag, ...(Tag | string)[]]
+
 export type TagCategory = 'Basic' | 'Segment' | 'MediaPlaylist' | 'MasterPlaylist' | 'MediaorMasterPlaylist' | 'Unknown'
 
 export interface ExtInf {
@@ -1035,8 +1037,8 @@ function parseTag(line: string, params: ParseParams): Tag {
   return {name, category, value, attributes};
 }
 
-function lexicalParse(text: string, params: ParseParams) {
-  let lines: [Tag, ...(Tag | string)[]] = [] as unknown as [Tag, ...(Tag | string)[]];
+function lexicalParse(text: string, params: ParseParams): LexicalLines {
+  let lines: [Tag, ...(Tag | string)[]] = [] as unknown as LexicalLines;
   for (const l of text.split('\n')) {
     // V8 has garbage collection issues when cleaning up substrings split from strings greater
     // than 13 characters so before we continue we need to safely copy over each line so that it
@@ -1066,8 +1068,8 @@ function lexicalParse(text: string, params: ParseParams) {
   return lines;
 }
 
-function semanticParse(lines, params) {
-  let playlist;
+function semanticParse(lines: LexicalLines, params: ParseParams): MasterPlaylist | MediaPlaylist {
+  let playlist: MasterPlaylist | MediaPlaylist ;
   if (params.isMasterPlaylist) {
     playlist = parseMasterPlaylist(lines, params);
   } else {
@@ -1084,7 +1086,7 @@ function semanticParse(lines, params) {
   return playlist;
 }
 
-function parse(text) {
+export function parse(text) {
   const params: ParseParams = {
     version: undefined,
     isMasterPlaylist: undefined,
@@ -1100,5 +1102,3 @@ function parse(text) {
   playlist.source = text;
   return playlist;
 }
-
-module.exports = parse;
