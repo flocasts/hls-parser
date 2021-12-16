@@ -1,5 +1,5 @@
-const utils = require('./utils');
-const {
+import * as utils from './utils';
+import {
   Rendition,
   Variant,
   SessionData,
@@ -13,7 +13,7 @@ const {
   PartialSegment,
   PrefetchSegment,
   RenditionReport
-} = require('./types');
+} from './types';
 
 function unquote(str) {
   return utils.trim(str, '"');
@@ -783,7 +783,13 @@ function parseMediaPlaylist(lines, params) {
   return playlist;
 }
 
-function addSegment(playlist, segment, discontinuitySequence, currentKey, currentMap) {
+function addSegment(
+  playlist: MediaPlaylist,
+   segment: Segment,
+   discontinuitySequence: number,
+   currentKey: Key,
+  currentMap?: MediaInitializationSection
+): [number, Key, MediaInitializationSection] {
   const {discontinuity, key, map, byterange, uri} = segment;
   if (discontinuity) {
     segment.discontinuitySequence = discontinuitySequence + 1;
