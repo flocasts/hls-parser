@@ -1,6 +1,11 @@
-let options = {};
+export interface HlsParserOptions {
+  strictMode?: boolean;
+  silent?: boolean;
+}
 
-function THROW(err) {
+let options: HlsParserOptions = {};
+
+function THROW(err: Error) {
   if (!options.strictMode) {
     if (!options.silent) {
       console.error(err.message);
@@ -10,7 +15,7 @@ function THROW(err) {
   throw err;
 }
 
-function ASSERT(msg, ...options) {
+function ASSERT(msg, ...options: [string, ...boolean[]]): void {
   for (const [index, param] of options.entries()) {
     if (!param) {
       THROW(new Error(`${msg} : Failed at [${index}]`));
@@ -18,7 +23,7 @@ function ASSERT(msg, ...options) {
   }
 }
 
-function CONDITIONALASSERT(...options) {
+function CONDITIONALASSERT(...options: [boolean, any][]): void {
   for (const [index, [cond, param]] of options.entries()) {
     if (!cond) {
       continue;
@@ -29,7 +34,7 @@ function CONDITIONALASSERT(...options) {
   }
 }
 
-function PARAMCHECK(...options) {
+function PARAMCHECK(...options: boolean[]): void {
   for (const [index, param] of options.entries()) {
     if (param === undefined) {
       THROW(new Error(`Param Check : Failed at [${index}]`));
@@ -37,7 +42,7 @@ function PARAMCHECK(...options) {
   }
 }
 
-function CONDITIONALPARAMCHECK(...options) {
+function CONDITIONALPARAMCHECK(...options: [boolean, any][]): void {
   for (const [index, [cond, param]] of options.entries()) {
     if (!cond) {
       continue;
@@ -48,33 +53,33 @@ function CONDITIONALPARAMCHECK(...options) {
   }
 }
 
-function INVALIDPLAYLIST(msg) {
+function INVALIDPLAYLIST(msg: string): void {
   THROW(new Error(`Invalid Playlist : ${msg}`));
 }
 
-function toNumber(str, radix = 10) {
+function toNumber(str: string, radix = 10): number {
   if (typeof str === 'number') {
     return str;
   }
-  const num = radix === 10 ? Number.parseFloat(str, radix) : Number.parseInt(str, radix);
+  const num = radix === 10 ? Number.parseFloat(str) : Number.parseInt(str, radix);
   if (Number.isNaN(num)) {
     return 0;
   }
   return num;
 }
 
-function hexToByteSequence(str) {
+function hexToByteSequence(str: string): Buffer {
   if (str.startsWith('0x') || str.startsWith('0X')) {
     str = str.slice(2);
   }
-  const numArray = [];
+  const numArray: number[] = [];
   for (let i = 0; i < str.length; i += 2) {
     numArray.push(toNumber(str.slice(i, i + 2), 16));
   }
   return Buffer.from(numArray);
 }
 
-function byteSequenceToHex(sequence, start = 0, end = sequence.length) {
+function byteSequenceToHex(sequence: Buffer, start = 0, end = sequence.length): string {
   if (end <= start) {
     THROW(new Error(`end must be larger than start : start=${start}, end=${end}`));
   }
@@ -85,7 +90,10 @@ function byteSequenceToHex(sequence, start = 0, end = sequence.length) {
   return `0x${array.join('')}`;
 }
 
-function tryCatch(body, errorHandler) {
+export type BodyHandler = () => string
+export type ErrorHandler = (Error) => void
+
+function tryCatch(body: () => string, errorHandler: ErrorHandler): ReturnType<BodyHandler | ErrorHandler> {
   try {
     return body();
   } catch (err) {
@@ -93,8 +101,8 @@ function tryCatch(body, errorHandler) {
   }
 }
 
-function splitAt(str, delimiter, index = 0) {
-  let lastDelimiterPos = -1;
+function splitAt(str:string, delimiter: string, index = 0): string[] | [string] {
+  let lastDelimiterPos: number = -1;
   for (let i = 0, j = 0; i < str.length; i++) {
     if (str[i] === delimiter) {
       if (j++ === index) {
@@ -109,7 +117,7 @@ function splitAt(str, delimiter, index = 0) {
   return [str];
 }
 
-function trim(str, char = ' ') {
+function trim(str: string, char = ' '): string {
   if (!str) {
     return str;
   }
@@ -126,10 +134,10 @@ function trim(str, char = ' ') {
   return str;
 }
 
-function splitByCommaWithPreservingQuotes(str) {
-  const list = [];
-  let doParse = true;
-  let start = 0;
+function splitByCommaWithPreservingQuotes(str: string): string[] {
+  const list: string[] = [];
+  let doParse: boolean = true;
+  let start: number = 0;
   const prevQuotes = [];
   for (let i = 0; i < str.length; i++) {
     const curr = str[i];
@@ -154,9 +162,9 @@ function splitByCommaWithPreservingQuotes(str) {
   return list;
 }
 
-function camelify(str) {
-  const array = [];
-  let nextUpper = false;
+function camelify(str): string {
+  const array: string[] = [];
+  let nextUpper: boolean = false;
   for (const ch of str) {
     if (ch === '-' || ch === '_') {
       nextUpper = true;
@@ -172,7 +180,7 @@ function camelify(str) {
   return array.join('');
 }
 
-function formatDate(date) {
+function formatDate(date: Date): string {
   const YYYY = date.getUTCFullYear();
   const MM = ('0' + (date.getUTCMonth() + 1)).slice(-2);
   const DD = ('0' + date.getUTCDate()).slice(-2);
@@ -183,7 +191,8 @@ function formatDate(date) {
   return `${YYYY}-${MM}-${DD}T${hh}:${mm}:${ss}.${msc}Z`;
 }
 
-function hasOwnProp(obj, propName) {
+type Callable = (...any:any[]) => any
+function hasOwnProp<T extends Record<string, Callable>, K extends keyof T>(obj: T, propName: K): ReturnType<T[K]> {
   return Object.hasOwnProperty.call(obj, propName);
 }
 
