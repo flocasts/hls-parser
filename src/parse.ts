@@ -17,6 +17,22 @@ import {
   Resolution
 } from './types';
 
+export interface ParseParams {
+  version?: number,
+  isMasterPlaylist?: boolean,
+  hasMap: boolean,
+  targetDuration: number,
+  compatibleVersion: number,
+  isClosedCaptionsNone: boolean,
+  hash: Record<string, any>;
+}
+
+export interface Tag {
+  name: string;
+  category: TagCategory;
+  value: unknown;
+  attributes: Attributes;
+}
 export type TagName =
   // Basic
   'EXTM3U' |
@@ -1002,7 +1018,7 @@ function CHECKTAGCATEGORY(category, params) {
   // category === 'Basic' or 'MediaorMasterPlaylist' or 'Unknown'
 }
 
-function parseTag(line, params) {
+function parseTag(line: string, params: ParseParams): Tag {
   const [name, param] = splitTag(line);
   const category = getTagCategory(name);
   CHECKTAGCATEGORY(category, params);
@@ -1019,8 +1035,8 @@ function parseTag(line, params) {
   return {name, category, value, attributes};
 }
 
-function lexicalParse(text, params) {
-  const lines = [];
+function lexicalParse(text: string, params: ParseParams) {
+  let lines: [Tag, ...(Tag | string)[]] = [] as unknown as [Tag, ...(Tag | string)[]];
   for (const l of text.split('\n')) {
     // V8 has garbage collection issues when cleaning up substrings split from strings greater
     // than 13 characters so before we continue we need to safely copy over each line so that it
@@ -1069,7 +1085,7 @@ function semanticParse(lines, params) {
 }
 
 function parse(text) {
-  const params = {
+  const params: ParseParams = {
     version: undefined,
     isMasterPlaylist: undefined,
     hasMap: false,
