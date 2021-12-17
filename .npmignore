@@ -49,3 +49,4 @@ tsconfig.json
 .gitignore
 .nvmrc
 .prettierrc
+.deploy
