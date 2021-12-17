@@ -1,5 +1,5 @@
 {
-  "name": "hls-parser",
+  "name": "@flosportsinc/hls-parser",
   "version": "1.0.0",
   "description": "A simple library to read/write HLS playlists",
   "main": "dist/index.js",
@@ -15,6 +15,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/flocasts/hls-parser"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@flosportsinc"
   },
   "keywords": [
     "HLS",
