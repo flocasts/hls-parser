@@ -1,5 +1,5 @@
 {
-  "name": "@flosportsinc/hls-parser",
+  "name": "hls-parser",
   "version": "1.0.0",
   "description": "A simple library to read/write HLS playlists",
   "main": "dist/index.js",
