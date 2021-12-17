@@ -27,9 +27,9 @@
   "author": "Kuu Miyazaki & Harold Waters",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kuu/hls-parser/issues"
+    "url": "https://github.com/flocasts/hls-parser/issues"
   },
-  "homepage": "https://github.com/kuu/hls-parser#readme",
+  "homepage": "https://github.com/flocasts/hls-parser#readme",
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.7.0",
     "@typescript-eslint/parser": "^5.7.0",
