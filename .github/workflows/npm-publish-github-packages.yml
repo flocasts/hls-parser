@@ -7,7 +7,6 @@ on: workflow_dispatch
 
 jobs:
   publish-npm:
-    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
