@@ -42,3 +42,10 @@ test
 .npmignore
 webpack.config.js
 LICENSE
+
+dist/tsconfig.tsbuildinfo
+tsconfig.json
+.eslintrc.json
+.gitignore
+.nvmrc
+.prettierrc
