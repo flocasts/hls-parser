@@ -16,7 +16,7 @@
     "type": "git"
   },
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/@flosportsinc"
+    "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
     "HLS",
