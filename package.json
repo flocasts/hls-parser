@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "A simple library to read/write HLS playlists",
   "main": "dist/index.js",
-  "browser": "dist/hls-parser.min.js",
   "scripts": {
     "audit": "npm audit --audit-level high",
     "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
@@ -13,11 +12,11 @@
     "test": "npm run lint && npm run build && npm run audit && ava --verbose"
   },
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/flocasts/hls-parser"
+    "url": "git+https://github.com/flocasts/hls-parser.git",
+    "type": "git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/@flosportsinc"
+    "registry": "https://registry.npmjs.org/@flosportsinc"
   },
   "keywords": [
     "HLS",
