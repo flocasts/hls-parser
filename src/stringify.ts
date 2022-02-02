@@ -14,17 +14,23 @@ const ALLOW_REDUNDANCY = [
 
 const SKIP_IF_REDUNDANT = ['#EXT-X-MEDIA'];
 
+export type Replacer = (line: string, index: number, lines: readonly string[]) => string;
+
 class LineArray extends Array {
     public baseUri: string;
-    constructor(baseUri) {
+    public replacer: Replacer;
+    constructor(baseUri, replacer: Replacer = (line: string): string => line) {
         super();
         this.baseUri = baseUri;
+        this.replacer = replacer;
     }
 
-    // @override
-    push(...elems): number {
-        // redundancy check
-        for (const elem of elems) {
+    /**
+     * @override
+     */
+    public push(...elems: string[]): number {
+        for (let elem of elems) {
+            elem = this.replacer(elem, this.length, this);
             if (!elem.startsWith('#')) {
                 super.push(elem);
                 continue;
@@ -328,7 +334,7 @@ function buildSegment(lines, segment, lastKey, lastMap, version = 1) {
     if (segment.byterange) {
         lines.push(`#EXT-X-BYTERANGE:${buildByteRange(segment.byterange)}`);
     }
-    Array.prototype.push.call(lines, `${segment.uri}`); // URIs could be redundant when EXT-X-BYTERANGE is used
+    lines.push(`${segment.uri}`);
     return [lastKey, lastMap, markerType];
 }
 
@@ -428,10 +434,10 @@ function buildParts(lines, parts) {
     return hint;
 }
 
-export function stringify(playlist) {
+export function stringify(playlist, replacer?: Replacer) {
     utils.PARAMCHECK(playlist);
     utils.ASSERT('Not a playlist', playlist.type === 'playlist');
-    const lines = new LineArray(playlist.uri);
+    const lines = new LineArray(playlist.uri, replacer);
     lines.push('#EXTM3U');
     if (playlist.version) {
         lines.push(`#EXT-X-VERSION:${playlist.version}`);
@@ -451,8 +457,5 @@ export function stringify(playlist) {
     } else {
         buildMediaPlaylist(lines, playlist);
     }
-    // console.log('<<<');
-    // console.log(lines.join('\n'));
-    // console.log('>>>');
     return lines.join('\n');
 }
