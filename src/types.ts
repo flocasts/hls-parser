@@ -17,8 +17,10 @@ export interface Resolution {
     height: number;
 }
 
-export interface RenditionProperties {
-    type: string;
+export type RenditionType = 'AUDIO' | 'VIDEO' | 'SUBTITLES' | 'CLOSED-CAPTIONS';
+
+export interface RenditionProperties<T extends RenditionType> {
+    type: T;
     uri: string;
     groupId: string;
     language: string;
@@ -32,20 +34,20 @@ export interface RenditionProperties {
     channels: string;
 }
 
-export type RenditionConstructorOptionalProperties = Partial<
-    Pick<RenditionProperties, 'uri' | 'language' | 'assocLanguage' | 'isDefault' | 'autoselect' | 'forced' | 'channels'>
+export type RenditionConstructorOptionalProperties<T extends RenditionType> = Partial<
+    Pick<RenditionProperties<T>, 'uri' | 'language' | 'assocLanguage' | 'isDefault' | 'autoselect' | 'forced' | 'channels'>
 >;
 
-export type RenditionConstructorRequiredProperties = Pick<
-    RenditionProperties,
+export type RenditionConstructorRequiredProperties<T extends RenditionType> = Pick<
+    RenditionProperties<T>,
     'type' | 'groupId' | 'name' | 'instreamId'
 >;
 
-export type RenditionConstructorProperties = RenditionConstructorOptionalProperties &
-    RenditionConstructorRequiredProperties;
+export type RenditionConstructorProperties<T extends RenditionType> = RenditionConstructorOptionalProperties<T> &
+    RenditionConstructorRequiredProperties<T>;
 
-export class Rendition implements RenditionProperties {
-    public type: string;
+export class Rendition<T extends RenditionType> implements RenditionProperties<T> {
+    public type: T;
     public uri: string;
     public groupId: string;
     public language: string;
@@ -71,7 +73,7 @@ export class Rendition implements RenditionProperties {
         instreamId, // required if type=CLOSED-CAPTIONS
         characteristics,
         channels,
-    }: RenditionProperties) {
+    }: RenditionProperties<T>) {
         utils.PARAMCHECK(type, groupId, name);
         utils.CONDITIONALASSERT(
             [type === 'SUBTITLES', uri],
@@ -107,17 +109,17 @@ export interface VariantProperties {
     bandwidth: number;
     averageBandwidth: number;
     score: number;
-    codecs: string[];
+    codecs: string;
     resolution: Resolution;
     frameRate: number;
     hdcpLevel: string;
     allowedCpc: boolean;
     videoRange: string;
     stableVariantId: string;
-    audio: string[];
-    video: string[];
-    subtitles: string[];
-    closedCaptions: Rendition[];
+    audio: Rendition<'AUDIO'>[];
+    video: Rendition<'VIDEO'>[];
+    subtitles: Rendition<'SUBTITLES'>[];
+    closedCaptions: Rendition<'CLOSED-CAPTIONS'>[];
     currentRenditions: VariantCurrentRendition;
 }
 
@@ -152,17 +154,17 @@ export class Variant implements VariantProperties {
     public bandwidth: number;
     public averageBandwidth: number;
     public score: number;
-    public codecs: string[];
+    public codecs: string;
     public resolution: Resolution;
     public frameRate: number;
     public hdcpLevel: string;
     public allowedCpc: boolean;
     public videoRange: string;
     public stableVariantId: string;
-    public audio: string[];
-    public video: string[];
-    public subtitles: string[];
-    public closedCaptions: Rendition[];
+    public audio: Rendition<'AUDIO'>[];
+    public video: Rendition<'VIDEO'>[];
+    public subtitles: Rendition<'SUBTITLES'>[];
+    public closedCaptions: Rendition<'CLOSED-CAPTIONS'>[];
     public currentRenditions: VariantCurrentRendition;
 
     constructor({
@@ -307,8 +309,8 @@ export class MediaInitializationSection implements MediaInitializationSectionPro
 export interface DateRangeProperties {
     id: string;
     classId: string;
-    start: string;
-    end: string;
+    start: Date;
+    end: Date;
     duration: number;
     plannedDuration: number;
     endOnNext: boolean;
@@ -325,8 +327,8 @@ export type DateRangeConstructorProperties = DateRangeOptionalConstructorPropert
 export class DateRange implements DateRangeProperties {
     public id: string;
     public classId: string;
-    public start: string;
-    public end: string;
+    public start: Date;
+    public end: Date;
     public duration: number;
     public plannedDuration: number;
     public endOnNext: boolean;
@@ -587,7 +589,7 @@ export interface SegmentProperties extends Data {
     discontinuitySequence: number;
     key: Key;
     map: MediaInitializationSection;
-    programDateTime: Date;
+    programDateTime: Date | null;
     dateRange: DateRange;
     markers: SpliceInfo[];
     parts: PartialSegment[];
@@ -627,7 +629,7 @@ export class Segment extends Data implements SegmentProperties {
     public discontinuitySequence: number;
     public key: Key;
     public map: MediaInitializationSection;
-    public programDateTime: Date;
+    public programDateTime: Date | null;
     public dateRange: DateRange;
     public markers: SpliceInfo[];
     public parts: PartialSegment[];
