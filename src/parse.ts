@@ -11,20 +11,34 @@ import {
     MediaPlaylist,
     Segment,
     PartialSegment,
+    Playlist,
     PrefetchSegment,
     RenditionReport,
     ByteRange,
     Resolution,
 } from './types';
 
-export interface ParseParams {
+export interface PlaylistTransformer {
+    (playlist: Playlist): Playlist;
+}
+
+export interface SegmentTransformer {
+    (segment: Segment, index: number, segments: Array<Segment>): Segment | null;
+}
+
+export interface UserParseParams {
+    segmentTransformers?: Array<SegmentTransformer>;
+    playlistTransformers?: Array<PlaylistTransformer>;
+}
+
+export interface ParseParams extends UserParseParams {
     version?: number;
     isMasterPlaylist?: boolean;
     hasMap: boolean;
     targetDuration: number;
     compatibleVersion: number;
     isClosedCaptionsNone: boolean;
-    hash: Record<string, any>;
+    hash: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export interface Tag {
@@ -484,7 +498,7 @@ function sameKey(key1, key2) {
     return true;
 }
 
-function parseMasterPlaylist(lines, params) {
+function parseMasterPlaylist(lines, params: ParseParams): MasterPlaylist {
     const playlist = new MasterPlaylist();
     let variantIsScored = false;
     for (const [index, { name, value, attributes }] of lines.entries()) {
@@ -580,6 +594,13 @@ function parseMasterPlaylist(lines, params) {
             }
         }
     }
+
+    // Apply any user-specified transformations
+    params.playlistTransformers?.reduce(
+        (playlist: Playlist, transformer: PlaylistTransformer): Playlist => transformer(playlist),
+        playlist,
+    );
+
     return playlist;
 }
 
@@ -753,7 +774,7 @@ function parsePrefetchSegment(lines, uri, start, end, mediaSequenceNumber, disco
     return segment;
 }
 
-function parseMediaPlaylist(lines, params) {
+function parseMediaPlaylist(lines, params: ParseParams): MediaPlaylist {
     const playlist = new MediaPlaylist();
     let segmentStart = -1;
     let mediaSequence = 0;
@@ -947,6 +968,33 @@ function parseMediaPlaylist(lines, params) {
     if (playlist.lowLatencyCompatibility) {
         checkLowLatencyCompatibility(playlist, containsParts);
     }
+
+    let transformedSegments: Array<Segment> = playlist.segments;
+    // Apply any user-specified Segment transformations
+    // Ideally we'd use map(), but we want the transformers to be able to remove segments
+    params.segmentTransformers?.forEach((transformerFunc: SegmentTransformer) => {
+        const newSegments: Array<Segment> = [];
+        // Apply the transformer to each segment
+        transformedSegments.forEach((segment: Segment, index: number, arr: Array<Segment>) => {
+            const transformedSegment: Segment | null = transformerFunc(segment, index, arr);
+            if (transformedSegment) {
+                newSegments.push(transformedSegment);
+            }
+        });
+
+        // The next transformer operates on the result of the last transformer
+        transformedSegments = newSegments;
+    });
+
+    // Assign the new segment array
+    playlist.segments = transformedSegments;
+
+    // Apply any user-specified Playlist transformations
+    params.playlistTransformers?.reduce(
+        (playlist: Playlist, transformer: PlaylistTransformer): Playlist => transformer(playlist),
+        playlist,
+    );
+
     return playlist;
 }
 
@@ -1186,8 +1234,8 @@ function semanticParse(lines: LexicalLines, params: ParseParams): MasterPlaylist
     return playlist;
 }
 
-export function parse(text) {
-    const params: ParseParams = {
+export function parse(text: string, customParams: UserParseParams = {}) {
+    const defaultParams: ParseParams = {
         version: undefined,
         isMasterPlaylist: undefined,
         hasMap: false,
@@ -1196,6 +1244,8 @@ export function parse(text) {
         isClosedCaptionsNone: false,
         hash: {},
     };
+
+    const params: ParseParams = Object.assign(defaultParams, customParams);
 
     const lines = lexicalParse(text, params);
     const playlist = semanticParse(lines, params);

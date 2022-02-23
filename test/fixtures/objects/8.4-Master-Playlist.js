@@ -1,4 +1,4 @@
-const {MasterPlaylist, Variant} = require('../../../types');
+const {MasterPlaylist, Variant} = require('../../../dist/types');
 
 const playlist = new MasterPlaylist({
   variants: createVariants()

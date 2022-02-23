@@ -1,6 +1,6 @@
 const test = require('ava');
 const utils = require('../../../helpers/utils');
-const HLS = require('../../../..');
+const HLS = require('../../../../dist');
 
 // SKIPPED-SEGMENTS=<N>: (mandatory)
 test('#EXT-X-SKIP_01', t => {

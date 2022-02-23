@@ -1,5 +1,5 @@
-const {MediaPlaylist, Segment, DateRange} = require('../../../types');
-const utils = require('../../../utils');
+const {MediaPlaylist, Segment, DateRange} = require('../../../dist/types');
+const utils = require('../../../dist/utils');
 
 const playlist = new MediaPlaylist({
   version: 3,

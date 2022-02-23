@@ -1,6 +1,6 @@
 const test = require('ava');
 const utils = require('../../../helpers/utils');
-const HLS = require('../../../..');
+const HLS = require('../../../../dist');
 
 // URI=<uri>: (mandatory)
 test('#EXT-X-RENDITION-REPORT_01', t => {

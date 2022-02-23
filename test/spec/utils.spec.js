@@ -1,6 +1,6 @@
 const test = require('ava');
 const rewire = require('rewire');
-const utils = require('../../utils');
+const utils = require('../../dist/utils');
 
 utils.setOptions({strictMode: true});
 
@@ -171,7 +171,7 @@ test('utils.THROW.strictMode', t => {
 
 test('utils.THROW.silent', t => {
   let silent = false;
-  const utils = rewire('../../utils');
+  const utils = rewire('../../dist/utils');
   const errorHandler = msg => {
     if (silent) {
       t.is(msg, 'end');

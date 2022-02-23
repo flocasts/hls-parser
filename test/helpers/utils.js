@@ -1,4 +1,4 @@
-const HLS = require('../..');
+const HLS = require('../../dist');
 
 HLS.setOptions({strictMode: true});
 

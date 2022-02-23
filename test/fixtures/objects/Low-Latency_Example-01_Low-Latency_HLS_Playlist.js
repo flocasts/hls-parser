@@ -1,4 +1,4 @@
-const {MediaPlaylist, Segment, PartialSegment, MediaInitializationSection, RenditionReport} = require('../../../types');
+const {MediaPlaylist, Segment, PartialSegment, MediaInitializationSection, RenditionReport} = require('../../../dist/types');
 
 const playlist = new MediaPlaylist({
   version: 6,

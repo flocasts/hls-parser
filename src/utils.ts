@@ -24,6 +24,7 @@ export function ASSERT(msg, ...options: boolean[]): void {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CONDITIONALASSERT(...options: [unknown, any][]): void {
     for (const [index, [cond, param]] of options.entries()) {
         if (!cond) {
@@ -43,6 +44,7 @@ export function PARAMCHECK(...options: unknown[]): void {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CONDITIONALPARAMCHECK(...options: [boolean, any][]): void {
     for (const [index, [cond, param]] of options.entries()) {
         if (!cond) {
@@ -192,7 +194,7 @@ export function formatDate(date: Date): string {
     return `${YYYY}-${MM}-${DD}T${hh}:${mm}:${ss}.${msc}Z`;
 }
 
-type Callable = (...any: any[]) => any;
+type Callable = (...any: any[]) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
 export function hasOwnProp<T extends Record<string, Callable>, K extends keyof T>(
     obj: T,
     propName: K,

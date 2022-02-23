@@ -1,4 +1,4 @@
-const {MasterPlaylist, Variant, Rendition} = require('../../../types');
+const {MasterPlaylist, Variant, Rendition} = require('../../../dist/types');
 
 function createRendition(groupId) {
   const renditions = [];
