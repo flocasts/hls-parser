@@ -23,7 +23,7 @@ export interface PlaylistTransformer {
 }
 
 export interface SegmentTransformer {
-    (segment: Segment, index: number, segments: Array<Segment>): Segment | null;
+    (segment: Segment, playlist: MediaPlaylist): Segment | null;
 }
 
 export interface UserParseParams {
@@ -917,7 +917,7 @@ function parseMediaPlaylist(lines, params: ParseParams): MediaPlaylist {
             if (prefetchFound) {
                 utils.INVALIDPLAYLIST('These segments must appear after all complete segments.');
             }
-            const segment = parseSegment(
+            let segment = parseSegment(
                 lines,
                 line,
                 segmentStart,
@@ -926,6 +926,10 @@ function parseMediaPlaylist(lines, params: ParseParams): MediaPlaylist {
                 discontinuitySequence,
                 params,
             );
+
+            // Apply user-specified segment transformers
+            segment = transformSegment(segment, playlist, params);
+
             if (segment) {
                 [discontinuitySequence, currentKey, currentMap] = addSegment(
                     playlist,
@@ -942,7 +946,7 @@ function parseMediaPlaylist(lines, params: ParseParams): MediaPlaylist {
         }
     }
     if (segmentStart !== -1) {
-        const segment = parseSegment(
+        let segment = parseSegment(
             lines,
             '',
             segmentStart,
@@ -951,6 +955,10 @@ function parseMediaPlaylist(lines, params: ParseParams): MediaPlaylist {
             discontinuitySequence,
             params,
         );
+
+        // Apply user-specified segment transformers
+        segment = transformSegment(segment, playlist, params);
+
         if (segment) {
             const { parts } = segment;
             if (parts.length > 0 && !playlist.endlist && !parts[parts.length - 1].hint) {
@@ -969,26 +977,6 @@ function parseMediaPlaylist(lines, params: ParseParams): MediaPlaylist {
         checkLowLatencyCompatibility(playlist, containsParts);
     }
 
-    let transformedSegments: Array<Segment> = playlist.segments;
-    // Apply any user-specified Segment transformations
-    // Ideally we'd use map(), but we want the transformers to be able to remove segments
-    params.segmentTransformers?.forEach((transformerFunc: SegmentTransformer) => {
-        const newSegments: Array<Segment> = [];
-        // Apply the transformer to each segment
-        transformedSegments.forEach((segment: Segment, index: number, arr: Array<Segment>) => {
-            const transformedSegment: Segment | null = transformerFunc(segment, index, arr);
-            if (transformedSegment) {
-                newSegments.push(transformedSegment);
-            }
-        });
-
-        // The next transformer operates on the result of the last transformer
-        transformedSegments = newSegments;
-    });
-
-    // Assign the new segment array
-    playlist.segments = transformedSegments;
-
     // Apply any user-specified Playlist transformations
     params.playlistTransformers?.reduce(
         (playlist: Playlist, transformer: PlaylistTransformer): Playlist => transformer(playlist),
@@ -996,6 +984,27 @@ function parseMediaPlaylist(lines, params: ParseParams): MediaPlaylist {
     );
 
     return playlist;
+}
+
+function transformSegment(segment: Segment, playlist: MediaPlaylist, params: ParseParams): Segment | null {
+    const transformers: Array<SegmentTransformer> | undefined = params.segmentTransformers;
+    if (!transformers) {
+        return segment;
+    }
+
+    // Apply all the transformers to the segment
+    const transformedSegment: Segment | null = transformers.reduce(
+        (currentSegment: Segment | null, transformer: SegmentTransformer) => {
+            // Don't bother transforming null segments
+            if (!currentSegment) {
+                return currentSegment;
+            }
+            return transformer(currentSegment, playlist);
+        },
+        segment,
+    );
+
+    return transformedSegment;
 }
 
 function addSegment(
