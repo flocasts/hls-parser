@@ -62,7 +62,7 @@ test("Segment Transformers", t => {
                     return null; // remove it
                 }
                 return segment;
-            }, (segment, i, segments) => {
+            }, (segment) => {
                 if (segment?.duration < 9) {
                     segment.duration = 88;
                 }
