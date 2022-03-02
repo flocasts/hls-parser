@@ -419,6 +419,8 @@ export interface PlaylistStart {
     precise: boolean;
 }
 
+export type CustomTags = Record<string, string | boolean | number>;
+
 export interface PlaylistProperties extends Data {
     isMasterPlaylist: boolean;
     uri: string;
@@ -426,10 +428,11 @@ export interface PlaylistProperties extends Data {
     independentSegments: boolean;
     start: PlaylistStart;
     source: string;
+    customTags: CustomTags;
 }
 
 export type PlaylistOptionalConstructorProperties = Partial<
-    Pick<PlaylistProperties, 'uri' | 'version' | 'independentSegments' | 'start' | 'source'>
+    Pick<PlaylistProperties, 'uri' | 'version' | 'independentSegments' | 'start' | 'source' | 'customTags'>
 >;
 export type PlaylistRequiredConstructorProperties = Pick<PlaylistProperties, 'isMasterPlaylist'>;
 export type PlaylistConstructorProperties = PlaylistOptionalConstructorProperties &
@@ -442,6 +445,7 @@ export class Playlist extends Data implements PlaylistProperties {
     public independentSegments: boolean;
     public start: PlaylistStart;
     public source: string;
+    public customTags: CustomTags;
 
     constructor({
         isMasterPlaylist, // required
@@ -450,6 +454,7 @@ export class Playlist extends Data implements PlaylistProperties {
         independentSegments = false,
         start,
         source,
+        customTags = {},
     }: PlaylistConstructorProperties) {
         super('playlist');
         utils.PARAMCHECK(isMasterPlaylist);
@@ -459,6 +464,7 @@ export class Playlist extends Data implements PlaylistProperties {
         this.independentSegments = independentSegments;
         this.start = start;
         this.source = source;
+        this.customTags = customTags;
     }
 }
 
