@@ -1,6 +1,6 @@
 const test = require('ava');
 const fixtures = require('../helpers/fixtures');
-const HLS = require('../../src');
+const HLS = require('../../dist');
 
 HLS.setOptions({strictMode: true});
 

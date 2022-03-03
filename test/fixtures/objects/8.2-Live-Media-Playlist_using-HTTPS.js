@@ -1,4 +1,4 @@
-const {MediaPlaylist, Segment} = require('../../../types');
+const {MediaPlaylist, Segment} = require('../../../dist/types');
 
 const mediaSequenceBase = 2680;
 

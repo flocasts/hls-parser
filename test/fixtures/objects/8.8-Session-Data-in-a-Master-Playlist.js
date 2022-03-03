@@ -1,4 +1,4 @@
-const {MasterPlaylist, SessionData} = require('../../../types');
+const {MasterPlaylist, SessionData} = require('../../../dist/types');
 
 const playlist = new MasterPlaylist({
   sessionDataList: createSetssionDataList()

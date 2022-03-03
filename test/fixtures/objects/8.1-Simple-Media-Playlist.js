@@ -1,4 +1,4 @@
-const {MediaPlaylist, Segment} = require('../../../types');
+const {MediaPlaylist, Segment} = require('../../../dist/types');
 
 const playlist = new MediaPlaylist({
   version: 3,

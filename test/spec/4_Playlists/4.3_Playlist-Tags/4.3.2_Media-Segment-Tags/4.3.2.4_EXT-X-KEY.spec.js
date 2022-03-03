@@ -1,5 +1,5 @@
 const test = require('ava');
-const HLS = require('../../../../..');
+const HLS = require('../../../../../dist');
 const utils = require('../../../../helpers/utils');
 
 // It applies to every Media Segment that appears between

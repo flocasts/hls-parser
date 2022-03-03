@@ -1,6 +1,6 @@
 const test = require('ava');
 const utils = require('../../../helpers/utils');
-const HLS = require('../../../..');
+const HLS = require('../../../../dist');
 
 // TYPE=<hint-type>: (mandatory)
 test('#EXT-X-PRELOAD-HINT_01', t => {

@@ -289,8 +289,8 @@ export type MediaInitializationSectionConstructorProperties = MediaInitializatio
 
 export class MediaInitializationSection implements MediaInitializationSectionProperties {
     public hint: boolean;
-    public uri: any;
-    public mimeType: any;
+    public uri: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    public mimeType: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     public byterange: ByteRange;
     constructor({
         hint = false,
@@ -314,7 +314,7 @@ export interface DateRangeProperties {
     duration: number;
     plannedDuration: number;
     endOnNext: boolean;
-    attributes: Record<string, any>;
+    attributes: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export type DateRangeOptionalConstructorProperties = Partial<
@@ -332,7 +332,7 @@ export class DateRange implements DateRangeProperties {
     public duration: number;
     public plannedDuration: number;
     public endOnNext: boolean;
-    public attributes: Record<string, any>;
+    public attributes: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     constructor({
         id, // required

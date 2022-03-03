@@ -1,6 +1,6 @@
 const test = require('ava');
 const utils = require('../../../helpers/utils');
-const HLS = require('../../../..');
+const HLS = require('../../../../dist');
 
 // EXT-X-PART-INF provides information about HLS Partial Segments in the Playlist. It is
 // required if a Playlist contains one or more EXT-X-PART tags.

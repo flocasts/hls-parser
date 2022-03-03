@@ -1,6 +1,6 @@
 const test = require("ava");
 const utils = require("../../helpers/utils");
-const HLS = require("../../..");
+const HLS = require("../../../dist");
 
 test("#EXT-X-CUE-IN_01", t => {
   const {MediaPlaylist, Segment} = HLS.types;
