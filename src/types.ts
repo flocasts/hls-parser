@@ -2,14 +2,14 @@ import * as utils from './utils';
 
 export interface LowLatencyCompatibility {
     canBlockReload: boolean;
-    canSkipUntil: boolean;
-    holdBack: boolean;
-    partHoldBack: boolean;
+    canSkipUntil: number;
+    holdBack?: boolean;
+    partHoldBack: number;
 }
 
 export interface ByteRange {
-    length: number;
-    offset: number;
+    length?: number;
+    offset?: number;
 }
 
 export interface Resolution {
@@ -26,8 +26,8 @@ export interface RenditionProperties<T extends RenditionType> {
     language: string;
     assocLanguage: string;
     name: string;
-    isDefault: string;
-    autoselect: string;
+    isDefault: boolean;
+    autoselect: boolean;
     forced: boolean;
     instreamId: string;
     characteristics: string;
@@ -35,12 +35,12 @@ export interface RenditionProperties<T extends RenditionType> {
 }
 
 export type RenditionConstructorOptionalProperties<T extends RenditionType> = Partial<
-    Pick<RenditionProperties<T>, 'uri' | 'language' | 'assocLanguage' | 'isDefault' | 'autoselect' | 'forced' | 'channels'>
+    Pick<RenditionProperties<T>, 'uri' | 'language' | 'assocLanguage' | 'isDefault' | 'autoselect' | 'forced' | 'channels' | 'characteristics' | 'instreamId'>
 >;
 
 export type RenditionConstructorRequiredProperties<T extends RenditionType> = Pick<
     RenditionProperties<T>,
-    'type' | 'groupId' | 'name' | 'instreamId'
+    'type' | 'groupId' | 'name'
 >;
 
 export type RenditionConstructorProperties<T extends RenditionType> = RenditionConstructorOptionalProperties<T> &
@@ -53,8 +53,8 @@ export class Rendition<T extends RenditionType> implements RenditionProperties<T
     public language: string;
     public assocLanguage: string;
     public name: string;
-    public isDefault: string;
-    public autoselect: string;
+    public isDefault: boolean;
+    public autoselect: boolean;
     public forced: boolean;
     public instreamId: string;
     public characteristics: string;
@@ -73,7 +73,7 @@ export class Rendition<T extends RenditionType> implements RenditionProperties<T
         instreamId, // required if type=CLOSED-CAPTIONS
         characteristics,
         channels,
-    }: RenditionProperties<T>) {
+    }: RenditionConstructorProperties<T>) {
         utils.PARAMCHECK(type, groupId, name);
         utils.CONDITIONALASSERT(
             [type === 'SUBTITLES', uri],
@@ -97,10 +97,10 @@ export class Rendition<T extends RenditionType> implements RenditionProperties<T
 }
 
 export interface VariantCurrentRendition {
-    audio: number;
-    video: number;
-    subtitles: number;
-    closedCaptions: number;
+    audio?: number;
+    video?: number;
+    subtitles?: number;
+    closedCaptions?: number;
 }
 
 export interface VariantProperties {
@@ -289,8 +289,8 @@ export type MediaInitializationSectionConstructorProperties = MediaInitializatio
 
 export class MediaInitializationSection implements MediaInitializationSectionProperties {
     public hint: boolean;
-    public uri: any;
-    public mimeType: any;
+    public uri: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    public mimeType: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     public byterange: ByteRange;
     constructor({
         hint = false,
@@ -314,13 +314,13 @@ export interface DateRangeProperties {
     duration: number;
     plannedDuration: number;
     endOnNext: boolean;
-    attributes: Record<string, any>;
+    attributes: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export type DateRangeOptionalConstructorProperties = Partial<
-    Pick<DateRangeProperties, 'start' | 'end' | 'duration' | 'plannedDuration' | 'endOnNext' | 'attributes'>
+    Pick<DateRangeProperties, 'start' | 'end' | 'duration' | 'plannedDuration' | 'endOnNext' | 'attributes' | 'classId'>
 >;
-export type DateRangeRequiredConstructorProperties = Pick<DateRangeProperties, 'id' | 'classId'>;
+export type DateRangeRequiredConstructorProperties = Pick<DateRangeProperties, 'id'>;
 export type DateRangeConstructorProperties = DateRangeOptionalConstructorProperties &
     DateRangeRequiredConstructorProperties;
 
@@ -332,7 +332,7 @@ export class DateRange implements DateRangeProperties {
     public duration: number;
     public plannedDuration: number;
     public endOnNext: boolean;
-    public attributes: Record<string, any>;
+    public attributes: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     constructor({
         id, // required
@@ -369,12 +369,13 @@ export type SpliceTagNames =
     | 'EXT-X-CUE-OUT-CONT'
     | 'EXT-OATCLS-SCTE35'
     | 'EXT-X-ASSET'
-    | 'EXT-X-SCTE35';
+    | 'EXT-X-SCTE35'
+    | 'EXT-X-CUE';
 export interface SpliceInfoProperties {
     type: SpliceTypes;
-    duration: number;
-    tagName: SpliceTagNames;
-    value: string;
+    duration?: number;
+    tagName?: SpliceTagNames;
+    value?: string;
 }
 
 export type SpliceInfoOptionsalConstructorProperties = Partial<
@@ -386,9 +387,9 @@ export type SpliceInfoConstructorProperties = SpliceInfoOptionsalConstructorProp
 
 export class SpliceInfo implements SpliceInfoProperties {
     public type: SpliceTypes;
-    public duration: number;
-    public tagName: SpliceTagNames;
-    public value: string;
+    public duration?: number;
+    public tagName?: SpliceTagNames;
+    public value?: string;
 
     constructor({
         type, // required
@@ -676,7 +677,7 @@ export interface PartialSegmentProperties extends Data {
     uri: string;
     duration: number;
     independent: boolean;
-    byterange: string;
+    byterange: ByteRange;
     gap: string;
 }
 
@@ -692,7 +693,7 @@ export class PartialSegment extends Data implements PartialSegmentProperties {
     public uri: string;
     public duration: number;
     public independent: boolean;
-    public byterange: string;
+    public byterange: ByteRange;
     public gap: string;
 
     constructor({

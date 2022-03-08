@@ -16,7 +16,7 @@ export function THROW(err: Error) {
     throw err;
 }
 
-export function ASSERT(msg, ...options: boolean[]): void {
+export function ASSERT(msg, ...options: unknown[]): void {
     for (const [index, param] of options.entries()) {
         if (!param) {
             THROW(new Error(`${msg} : Failed at [${index}]`));
@@ -24,6 +24,7 @@ export function ASSERT(msg, ...options: boolean[]): void {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CONDITIONALASSERT(...options: [unknown, any][]): void {
     for (const [index, [cond, param]] of options.entries()) {
         if (!cond) {
@@ -43,6 +44,7 @@ export function PARAMCHECK(...options: unknown[]): void {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CONDITIONALPARAMCHECK(...options: [boolean, any][]): void {
     for (const [index, [cond, param]] of options.entries()) {
         if (!cond) {
@@ -58,7 +60,7 @@ export function INVALIDPLAYLIST(msg: string): void {
     THROW(new Error(`Invalid Playlist : ${msg}`));
 }
 
-export function toNumber(str: string, radix = 10): number {
+export function toNumber(str: string | number, radix = 10): number {
     if (typeof str === 'number') {
         return str;
     }
@@ -91,10 +93,10 @@ export function byteSequenceToHex(sequence: Buffer, start = 0, end = sequence.le
     return `0x${array.join('')}`;
 }
 
-export type BodyHandler = () => string;
+export type BodyHandler = () => any; // eslint-disable-line @typescript-eslint/no-explicit-any
 export type ErrorHandler = (Error) => void;
 
-export function tryCatch(body: () => string, errorHandler: ErrorHandler): ReturnType<BodyHandler | ErrorHandler> {
+export function tryCatch(body: BodyHandler, errorHandler: ErrorHandler): ReturnType<BodyHandler | ErrorHandler> {
     try {
         return body();
     } catch (err) {
@@ -192,7 +194,7 @@ export function formatDate(date: Date): string {
     return `${YYYY}-${MM}-${DD}T${hh}:${mm}:${ss}.${msc}Z`;
 }
 
-type Callable = (...any: any[]) => any;
+type Callable = (...any: any[]) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
 export function hasOwnProp<T extends Record<string, Callable>, K extends keyof T>(
     obj: T,
     propName: K,
