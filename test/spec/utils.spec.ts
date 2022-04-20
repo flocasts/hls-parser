@@ -84,37 +84,6 @@ describe('utils', () => {
         expect(utils.byteSequenceToHex(Buffer.from([255, 255, 256]))).toBe('0xFFFF00');
     });
 
-    test('utils.tryCatch', () => {
-        let result = utils.tryCatch(
-            () => {
-                return 1;
-            },
-            () => {
-                return 0;
-            },
-        );
-        expect(result).toBe(1);
-        result = utils.tryCatch(
-            () => {
-                return JSON.parse('{{');
-            },
-            () => {
-                return 0;
-            },
-        );
-        expect(result).toBe(0);
-        expect(() => {
-            utils.tryCatch(
-                () => {
-                    return JSON.parse('{{');
-                },
-                () => {
-                    return JSON.parse('}}');
-                },
-            );
-        }).toThrow();
-    });
-
     test('utils.splitAt', () => {
         expect(utils.splitAt('a=1', '=')).toEqual(['a', '1']);
         expect(utils.splitAt('a=1=2', '=')).toEqual(['a', '1=2']);
