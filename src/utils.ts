@@ -93,17 +93,6 @@ export function byteSequenceToHex(sequence: Buffer, start = 0, end = sequence.le
     return `0x${array.join('')}`;
 }
 
-export type BodyHandler = () => any; // eslint-disable-line @typescript-eslint/no-explicit-any
-export type ErrorHandler = (Error) => void;
-
-export function tryCatch(body: BodyHandler, errorHandler: ErrorHandler): ReturnType<BodyHandler | ErrorHandler> {
-    try {
-        return body();
-    } catch (err) {
-        return errorHandler(err);
-    }
-}
-
 export function splitAt(str: string, delimiter: string, index = 0): string[] | [string] {
     let lastDelimiterPos = -1;
     for (let i = 0, j = 0; i < str.length; i++) {
@@ -192,14 +181,6 @@ export function formatDate(date: Date): string {
     const ss = ('0' + date.getUTCSeconds()).slice(-2);
     const msc = ('00' + date.getUTCMilliseconds()).slice(-3);
     return `${YYYY}-${MM}-${DD}T${hh}:${mm}:${ss}.${msc}Z`;
-}
-
-type Callable = (...any: any[]) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
-export function hasOwnProp<T extends Record<string, Callable>, K extends keyof T>(
-    obj: T,
-    propName: K,
-): ReturnType<T[K]> {
-    return Object.hasOwnProperty.call(obj, propName);
 }
 
 export function setOptions(newOptions = {}): void {

@@ -88,9 +88,13 @@ An object that holds all the classes described below.
 
 
 ## Data format
-This section describes the structure of the object returned by `parse()` method.
+The following diagram describes the structure of the object returned by `parse()` method.
 
-![data structure](./data-structure.png)
+![data structure](docs/data-structure.png)
+
+Additionally, this data structure has been expanded upon to provide more accurate domain modeling and convenient business logic. These extra classes and relationships are ignored during parsing and serialization.
+
+![expanded structure](docs/expanded-structure.png)
 
 ### `Data`
 | Property         | Type          | Required | Default | Description   |
@@ -116,25 +120,26 @@ This section describes the structure of the object returned by `parse()` method.
 | `sessionKeyList`      | [`Key`]    | No       | [] | See [EXT-X-SESSION-KEY](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.5) |
 
 ### `Variant`
-| Property          | Type     | Required | Default   | Description   |
-| ----------------- | -------- | -------- | --------- | ------------- |
-| `uri`        | string  | Yes       | N/A        | URI of the variant playlist  |
-| `isIFrameOnly`  | boolean   | No       | undefined | `true` if the variant is an I-frame media playlist. See [EXT-X-I-FRAME-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.3) |
-| `bandwidth` | number  | Yes       | N/A        | See BANDWIDTH attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2) |
-| `averageBandwidth`      | number    | No       | undefined | See AVERAGE-BANDWIDTH attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2) |
-| `score`      | number    | No       | undefined | See SCORE attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-08#section-4.4.6.2) |
-| `codecs`      | string    | No       | undefined | See CODECS attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2) |
-| `resolution`      | object ({width: number, height: number})   | No       | undefined | See RESOLUTION attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2) |
-| `frameRate`      | number    | No       | undefined | See FRAME-RATE attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2) |
-| `hdcpLevel`      | string    | No       | undefined | See HDCP-LEVEL attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2) |
-| `allowedCpc`   | [object ({format: string, cpcList: [string]})]  | No       | undefined | See ALLOWED-CPC attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-08#section-4.4.6.2) |
-| `videoRange`      | string {"SDR","HLG","PQ"}    | No       | undefined | See VIDEO-RANGE attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-08#section-4.4.6.2) |
-| `stableVariantId`      | string   | No       | undefined | See STABLE-VARIANT-ID attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-08#section-4.4.6.2) |
-| `audio`      | [`Rendition`(type='AUDIO')]    | No       | [] | See AUDIO attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2) |
-| `video`      | [`Rendition`(type='VIDEO')]    | No       | [] | See VIDEO attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)  |
-| `subtitles`      | [`Rendition`(type='SUBTITLES')]    | No       | [] | See SUBTITLES attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)  |
-| `closedCaptions`      | [`Rendition`(type='CLOSED-CAPTIONS')]    | No       | [] | See CLOSED-CAPTIONS attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2) |
-| `currentRenditions`      | object ({audio: number, video: number, subtitles: number, closedCaptions: number})   | No       | {} | A hash object that contains array indices that points to the chosen `Rendition` for each type |
+| Property          | Type     | Required | Default   | Description                                                                                                                                                                                             |
+| ----------------- | -------- | -------- | --------- |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `uri`        | string  | Yes       | N/A        | URI of the variant playlist                                                                                                                                                                             |
+| `isIFrameOnly`  | boolean   | No       | undefined | `true` if the variant is an I-frame media playlist. See [EXT-X-I-FRAME-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.3)                                     |
+| `bandwidth` | number  | Yes       | N/A        | See BANDWIDTH attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)                                                                          |
+| `averageBandwidth`      | number    | No       | undefined | See AVERAGE-BANDWIDTH attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)                                                                  |
+| `score`      | number    | No       | undefined | See SCORE attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-08#section-4.4.6.2)                                                                                   |
+| `codecs`      | string    | No       | undefined | See CODECS attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)                                                                             |
+| `resolution`      | object ({width: number, height: number})   | No       | undefined | See RESOLUTION attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)                                                                         |
+| `frameRate`      | number    | No       | undefined | See FRAME-RATE attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)                                                                         |
+| `hdcpLevel`      | string    | No       | undefined | See HDCP-LEVEL attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)                                                                         |
+| `allowedCpc`   | [object ({format: string, cpcList: [string]})]  | No       | undefined | See ALLOWED-CPC attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-08#section-4.4.6.2)                                                                             |
+| `videoRange`      | string {"SDR","HLG","PQ"}    | No       | undefined | See VIDEO-RANGE attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-08#section-4.4.6.2)                                                                             |
+| `stableVariantId`      | string   | No       | undefined | See STABLE-VARIANT-ID attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-08#section-4.4.6.2)                                                                       |
+| `audio`      | [`Rendition`(type='AUDIO')]    | No       | [] | See AUDIO attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)                                                                              |
+| `video`      | [`Rendition`(type='VIDEO')]    | No       | [] | See VIDEO attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)                                                                              |
+| `subtitles`      | [`Rendition`(type='SUBTITLES')]    | No       | [] | See SUBTITLES attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)                                                                          |
+| `closedCaptions`      | [`Rendition`(type='CLOSED-CAPTIONS')]    | No       | [] | See CLOSED-CAPTIONS attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2)                                                                    |
+| `currentRenditions`      | object ({audio: number, video: number, subtitles: number, closedCaptions: number})   | No       | {} | A hash object that contains array indices that points to the chosen `Rendition` for each type                                                                                                           |
+| `playlist` | `MediaPlaylist` | No       | undefined | A reference to the `MediaPlaylist` object referenced by the `uri`. This is _not_ populated during parsing or referenced during serialization. It is for convenience and must be initialized separately. |
 
 ### `Rendition`
 | Property          | Type     | Required | Default   | Description   |
@@ -151,6 +156,7 @@ This section describes the structure of the object returned by `parse()` method.
 | `instreamId`  | string   | No       | undefined | See INSTREAM-ID attribute in [EXT-X-MEDIA](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.1) |
 | `characteristics`  | string   | No       | undefined | See CHARACTERISTICS attribute in [EXT-X-MEDIA](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.1) |
 | `channels`  | string   | No       | undefined | See CHANNELS attribute in [EXT-X-MEDIA](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.1) |
+| `playlist` | `MediaPlaylist` | No       | undefined | A reference to the `MediaPlaylist` object referenced by the `uri`. This is _not_ populated during parsing or referenced during serialization. It is for convenience and must be initialized separately. |
 
 ### `SessionData`
 | Property          | Type     | Required | Default   | Description   |
@@ -255,3 +261,9 @@ Only `EXT-X-CUE-OUT` and `EXT-X-CUE-IN` tags are supported. Other SCTE-35-relate
 | `uri`        | string  | Yes       | N/A        | See `URI` attribute in [EXT-X-RENDITION-REPORT](https://developer.apple.com/documentation/http_live_streaming/protocol_extension_for_low-latency_hls_preliminary_specification#3282435) |
 | `lastMSN`        | number  | No       | undefined  | See `LAST-MSN` attribute in [EXT-X-RENDITION-REPORT](https://developer.apple.com/documentation/http_live_streaming/protocol_extension_for_low-latency_hls_preliminary_specification#3282435) |
 | `lastPart`        | number  | No       | undefined | See `LAST-PART` attribute in [EXT-X-RENDITION-REPORT](https://developer.apple.com/documentation/http_live_streaming/protocol_extension_for_low-latency_hls_preliminary_specification#3282435) |
+
+### `RedundantStream`
+| Property | Type               | Required | Default  | Description                                                          |
+|----------|--------------------|----------|----------|----------------------------------------------------------------------|
+| `root`   | `MasterPlaylist`   | No       | undefined | The root playlist, derived from the available `sides` playlists      |
+| `sides`  | [`MasterPlaylist`] | Yes      | []       | The redundant `MasterPlaylist`s used to generate the `root` playlist |
