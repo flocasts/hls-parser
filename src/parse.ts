@@ -17,14 +17,9 @@ import {
     ByteRange,
     Resolution,
 } from './types';
+import PlaylistTransformer from './transformers/PlaylistTransformer';
+import SegmentTransformer from './transformers/SegmentTransformer';
 
-export interface PlaylistTransformer {
-    (playlist: Playlist): Playlist;
-}
-
-export interface SegmentTransformer {
-    (segment: Segment, playlist: MediaPlaylist): Segment | null;
-}
 
 export interface UserParseParams {
     segmentTransformers?: Array<SegmentTransformer>;

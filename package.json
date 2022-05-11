@@ -1,11 +1,11 @@
 {
     "name": "@flosportsinc/hls-parser",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "description": "A simple library to read/write HLS playlists",
     "main": "dist/index.js",
     "scripts": {
         "audit": "npm audit --audit-level high",
-        "build": "rm -rf ./dist && tsc",
+        "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
         "format": "prettier --write \"src/**/*.ts\"",
         "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
         "test": "npx jest --ci",

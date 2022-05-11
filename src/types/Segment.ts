@@ -16,9 +16,9 @@ export interface SegmentProperties extends Data {
     discontinuity: boolean;
     mediaSequenceNumber: number;
     discontinuitySequence: number;
-    key: Key;
-    map: MediaInitializationSection;
-    programDateTime: Date | null;
+    key: Key | null;
+    map: MediaInitializationSection | null;
+    programDateTime?: Date;
     dateRange: DateRange;
     markers: SpliceInfo[];
     parts: PartialSegment[];
@@ -56,9 +56,9 @@ export class Segment extends Data implements SegmentProperties {
     public discontinuity: boolean;
     public mediaSequenceNumber: number;
     public discontinuitySequence: number;
-    public key: Key;
-    public map: MediaInitializationSection;
-    public programDateTime: Date | null;
+    public key: Key | null;
+    public map: MediaInitializationSection | null;
+    public programDateTime?: Date;
     public dateRange: DateRange;
     public markers: SpliceInfo[];
     public parts: PartialSegment[];
@@ -91,8 +91,8 @@ export class Segment extends Data implements SegmentProperties {
         this.discontinuity = discontinuity;
         this.mediaSequenceNumber = mediaSequenceNumber;
         this.discontinuitySequence = discontinuitySequence;
-        this.key = key;
-        this.map = map;
+        this.key = key || null;
+        this.map = map || null;
         this.programDateTime = programDateTime;
         this.dateRange = dateRange;
         this.markers = markers;
