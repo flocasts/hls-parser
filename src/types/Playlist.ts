@@ -12,7 +12,7 @@ export interface PlaylistProperties extends Data {
     version: number;
     independentSegments: boolean;
     start: PlaylistStart;
-    source: string;
+    source?: string;
 }
 
 export type PlaylistOptionalConstructorProperties = Partial<
@@ -28,7 +28,7 @@ export class Playlist extends Data implements PlaylistProperties {
     public version: number;
     public independentSegments: boolean;
     public start: PlaylistStart;
-    public source: string;
+    public source?: string;
 
     constructor({
         isMasterPlaylist, // required

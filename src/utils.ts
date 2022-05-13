@@ -93,7 +93,7 @@ export function byteSequenceToHex(sequence: Buffer, start = 0, end = sequence.le
     return `0x${array.join('')}`;
 }
 
-export function splitAt(str: string, delimiter: string, index = 0): string[] | [string] {
+export function splitAt(str: string, delimiter: string, index = 0): [string, string] | [string] {
     let lastDelimiterPos = -1;
     for (let i = 0, j = 0; i < str.length; i++) {
         if (str[i] === delimiter) {
