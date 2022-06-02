@@ -7,21 +7,21 @@ import SpliceInfo from './SpliceInfo';
 import PartialSegment from './PartialSegment';
 
 export interface SegmentProperties extends Data {
-    uri: string;
-    mimeType: string;
-    data: string;
     duration: number;
-    title: string;
-    byterange: ByteRange;
+    uri: string;
+    mimeType?: string;
+    data?: string;
+    title?: string;
+    byterange?: ByteRange;
     discontinuity: boolean;
-    mediaSequenceNumber: number;
-    discontinuitySequence: number;
-    key: Key | null;
-    map: MediaInitializationSection | null;
+    mediaSequenceNumber?: number;
+    discontinuitySequence?: number;
+    key?: Key | null;
+    map?: MediaInitializationSection | null;
     programDateTime?: Date;
-    dateRange: DateRange;
-    markers: SpliceInfo[];
-    parts: PartialSegment[];
+    dateRange?: DateRange;
+    markers?: SpliceInfo[];
+    parts?: PartialSegment[];
 }
 
 export type SegmentOptionalConstructorProperties = Partial<
@@ -31,7 +31,6 @@ export type SegmentOptionalConstructorProperties = Partial<
         | 'discontinuitySequence'
         | 'markers'
         | 'parts'
-        | 'uri'
         | 'mimeType'
         | 'data'
         | 'title'
@@ -41,36 +40,38 @@ export type SegmentOptionalConstructorProperties = Partial<
         | 'map'
         | 'programDateTime'
         | 'dateRange'
-        | 'duration'
     >
 >;
-export type SegmentConstructorProperties = SegmentOptionalConstructorProperties;
+
+export type SegmentRequiredConstructorProperties = Pick<SegmentProperties, 'uri' | 'duration'>;
+
+export type SegmentConstructorProperties = SegmentOptionalConstructorProperties & SegmentRequiredConstructorProperties;
 
 export class Segment extends Data implements SegmentProperties {
-    public uri: string;
-    public mimeType: string;
-    public data: string;
     public duration: number;
-    public title: string;
-    public byterange: ByteRange;
+    public uri: string;
     public discontinuity: boolean;
-    public mediaSequenceNumber: number;
-    public discontinuitySequence: number;
+    public mimeType?: string;
+    public data?: string;
+    public title?: string;
+    public byterange?: ByteRange;
+    public mediaSequenceNumber?: number;
+    public discontinuitySequence?: number;
     public key: Key | null;
     public map: MediaInitializationSection | null;
     public programDateTime?: Date;
-    public dateRange: DateRange;
-    public markers: SpliceInfo[];
-    public parts: PartialSegment[];
+    public dateRange?: DateRange;
+    public markers?: SpliceInfo[];
+    public parts?: PartialSegment[];
 
     constructor({
+        duration,
         uri,
         mimeType,
         data,
-        duration,
         title,
         byterange,
-        discontinuity,
+        discontinuity = false,
         mediaSequenceNumber = 0,
         discontinuitySequence = 0,
         key,
@@ -82,10 +83,10 @@ export class Segment extends Data implements SegmentProperties {
     }: SegmentConstructorProperties) {
         super('segment');
         // utils.PARAMCHECK(uri, mediaSequenceNumber, discontinuitySequence);
+        this.duration = duration;
         this.uri = uri;
         this.mimeType = mimeType;
         this.data = data;
-        this.duration = duration;
         this.title = title;
         this.byterange = byterange;
         this.discontinuity = discontinuity;
@@ -97,6 +98,15 @@ export class Segment extends Data implements SegmentProperties {
         this.dateRange = dateRange;
         this.markers = markers;
         this.parts = parts;
+    }
+
+    get endTime(): Date | null {
+        if (!this.programDateTime) {
+            return null;
+        } else {
+            const millis = this.programDateTime.getTime() + this.duration * 1000;
+            return new Date(millis);
+        }
     }
 }
 
