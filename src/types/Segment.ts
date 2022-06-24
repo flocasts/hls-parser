@@ -6,14 +6,14 @@ import DateRange from './DateRange';
 import SpliceInfo from './SpliceInfo';
 import PartialSegment from './PartialSegment';
 
-export interface SegmentProperties extends Data {
+export interface SegmentProperties {
     duration: number;
     uri: string;
     mimeType?: string;
     data?: string;
     title?: string;
     byterange?: ByteRange;
-    discontinuity: boolean;
+    discontinuity?: boolean;
     mediaSequenceNumber?: number;
     discontinuitySequence?: number;
     key?: Key | null;
@@ -23,29 +23,6 @@ export interface SegmentProperties extends Data {
     markers?: SpliceInfo[];
     parts?: PartialSegment[];
 }
-
-export type SegmentOptionalConstructorProperties = Partial<
-    Pick<
-        SegmentProperties,
-        | 'mediaSequenceNumber'
-        | 'discontinuitySequence'
-        | 'markers'
-        | 'parts'
-        | 'mimeType'
-        | 'data'
-        | 'title'
-        | 'byterange'
-        | 'discontinuity'
-        | 'key'
-        | 'map'
-        | 'programDateTime'
-        | 'dateRange'
-    >
->;
-
-export type SegmentRequiredConstructorProperties = Pick<SegmentProperties, 'uri' | 'duration'>;
-
-export type SegmentConstructorProperties = SegmentOptionalConstructorProperties & SegmentRequiredConstructorProperties;
 
 export class Segment extends Data implements SegmentProperties {
     public duration: number;
@@ -80,7 +57,7 @@ export class Segment extends Data implements SegmentProperties {
         dateRange,
         markers = [],
         parts = [],
-    }: SegmentConstructorProperties) {
+    }: SegmentProperties) {
         super('segment');
         // utils.PARAMCHECK(uri, mediaSequenceNumber, discontinuitySequence);
         this.duration = duration;

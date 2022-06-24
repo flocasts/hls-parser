@@ -600,7 +600,7 @@ function parseMasterPlaylist(lines, params: ParseParams): MasterPlaylist {
 }
 
 function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuitySequence, params) {
-    const segment = new Segment({ uri, mediaSequenceNumber, discontinuitySequence });
+    const segment = new Segment({ uri, mediaSequenceNumber, discontinuitySequence, duration: -0 });
     let mapHint = false;
     let partHint = false;
     for (let i = start; i <= end; i++) {
