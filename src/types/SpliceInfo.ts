@@ -13,10 +13,11 @@ export interface SpliceInfoProperties {
     duration?: number;
     tagName?: SpliceTagNames;
     value?: string;
+    adProviderSpecificTag?: string;
 }
 
 export type SpliceInfoOptionsalConstructorProperties = Partial<
-    Pick<SpliceInfoProperties, 'duration' | 'tagName' | 'value'>
+    Pick<SpliceInfoProperties, 'duration' | 'tagName' | 'value' | 'adProviderSpecificTag'>
 >;
 export type SpliceInfoRequiredConstructorProperties = Pick<SpliceInfoProperties, 'type'>;
 export type SpliceInfoConstructorProperties = SpliceInfoOptionsalConstructorProperties &
@@ -27,12 +28,14 @@ export class SpliceInfo implements SpliceInfoProperties {
     public duration?: number;
     public tagName?: SpliceTagNames;
     public value?: string;
+    public adProviderSpecificTag?: string;
 
     constructor({
         type, // required
         duration, // required if the type is 'OUT'
         tagName, // required if the type is 'RAW'
         value,
+        adProviderSpecificTag,
     }: SpliceInfoConstructorProperties) {
         utils.PARAMCHECK(type);
         utils.CONDITIONALPARAMCHECK([type === 'OUT', duration]);
@@ -41,6 +44,7 @@ export class SpliceInfo implements SpliceInfoProperties {
         this.duration = duration;
         this.tagName = tagName;
         this.value = value;
+        this.adProviderSpecificTag = adProviderSpecificTag;
     }
 }
 
