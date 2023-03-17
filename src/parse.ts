@@ -20,7 +20,6 @@ import {
 import PlaylistTransformer from './transformers/PlaylistTransformer';
 import SegmentTransformer from './transformers/SegmentTransformer';
 
-
 export interface UserParseParams {
     segmentTransformers?: Array<SegmentTransformer>;
     playlistTransformers?: Array<PlaylistTransformer>;
@@ -57,6 +56,7 @@ export type TagName =
     | 'EXT-X-DATERANGE'
     | 'EXT-X-CUE-OUT'
     | 'EXT-X-CUE-IN'
+    | 'EXT-X-TRANSMIT-CUE-OUT'
     | 'EXT-X-CUE-OUT-CONT'
     | 'EXT-X-CUE'
     | 'EXT-OATCLS-SCTE35'
@@ -132,6 +132,7 @@ function getTagCategory(tagName: TagName | string): TagCategory {
         case 'EXT-X-DATERANGE':
         case 'EXT-X-CUE-OUT':
         case 'EXT-X-CUE-IN':
+        case 'EXT-X-TRANSMIT-CUE-OUT':
         case 'EXT-X-CUE-OUT-CONT':
         case 'EXT-X-CUE':
         case 'EXT-OATCLS-SCTE35':
@@ -346,6 +347,8 @@ function parseTagParam(name: TagName, param: string): TagParams {
             return [new Date(param), null];
         case 'EXT-X-PLAYLIST-TYPE':
             return [param, null]; // <EVENT|VOD>
+        case 'EXT-X-TRANSMIT-CUE-OUT':
+            return [null, parseAttributeList(param)];
         default:
             return [param, null]; // Unknown tag
     }
@@ -676,6 +679,15 @@ function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuity
                 new SpliceInfo({
                     type: 'OUT',
                     duration: (attributes && attributes.DURATION) || value,
+                }),
+            );
+        } else if (name === 'EXT-X-TRANSMIT-CUE-OUT') {
+            segment.markers.push(
+                new SpliceInfo({
+                    type: 'OUT',
+                    duration: (attributes && attributes.MaxDuration) || value,
+                    adProviderSpecificTag: 'transmit',
+                    value: attributes,
                 }),
             );
         } else if (name === 'EXT-X-CUE-IN') {

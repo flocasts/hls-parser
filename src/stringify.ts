@@ -8,6 +8,7 @@ const ALLOW_REDUNDANCY = [
     '#EXT-X-STREAM-INF',
     '#EXT-X-CUE-OUT',
     '#EXT-X-CUE-IN',
+    '#EXT-X-TRANSMIT-CUE-OUT',
     '#EXT-X-KEY',
     '#EXT-X-MAP',
 ];
@@ -381,9 +382,17 @@ function buildDateRange(dateRange) {
 function buildMarkers(lines, markers) {
     let type = '';
     for (const marker of markers) {
-        if (marker.type === 'OUT') {
+        if (marker.type === 'OUT' && !marker.adProviderSpecificTag) {
             type = 'OUT';
             lines.push(`#EXT-X-CUE-OUT:DURATION=${marker.duration}`);
+        } else if (marker.type === 'OUT' && marker.adProviderSpecificTag) {
+            if (marker.adProviderSpecificTag === 'transmit') {
+                const { AdFormat, MaxDuration, KeepCreativeAudio, InsertionType } = marker.value;
+                type = 'OUT';
+                lines.push(
+                    `#EXT-X-TRANSMIT-CUE-OUT:AdFormat=${AdFormat},MaxDuration=${MaxDuration},KeepCreativeAudio=${KeepCreativeAudio},InsertionType=${InsertionType}`,
+                );
+            }
         } else if (marker.type === 'IN') {
             type = 'IN';
             lines.push('#EXT-X-CUE-IN');
