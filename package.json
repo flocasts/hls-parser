@@ -16,7 +16,7 @@
         "type": "git"
     },
     "publishConfig": {
-        "registry": "https://registry.npmjs.org/"
+        "@flocasts:registry": "https://npm.pkg.github.com"
     },
     "keywords": [
         "HLS",
