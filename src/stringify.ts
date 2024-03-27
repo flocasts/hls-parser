@@ -351,7 +351,7 @@ function buildDateRange(dateRange) {
         attrs.push(`START-DATE="${utils.formatDate(dateRange.start)}"`);
     }
     if (dateRange.end) {
-        attrs.push(`END-DATE="${dateRange.end}"`);
+        attrs.push(`END-DATE="${utils.formatDate(dateRange.end)}"`);
     }
     if (dateRange.duration) {
         attrs.push(`DURATION=${dateRange.duration}`);
