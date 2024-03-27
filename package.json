@@ -26,7 +26,7 @@
         "streaming",
         "typescript"
     ],
-    "author": "Kuu Miyazaki, Harold Waters, Andrew Bird",
+    "author": "Kuu Miyazaki, Harriet Waters, Andrew Bird",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/flocasts/hls-parser/issues"
