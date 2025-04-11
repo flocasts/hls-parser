@@ -2,6 +2,13 @@ import MediaPlaylist from './MediaPlaylist';
 import Rendition from './Rendition';
 import Resolution from './Resolution';
 import * as utils from '../utils';
+import { AllowedCpc } from '../parse';
+
+export enum VariantType {
+    Standard = 'EXT-X-STREAM-INF',
+    IFrame = 'EXT-X-I-FRAME-STREAM-INF',
+    Image = 'EXT-X-IMAGE-STREAM-INF',
+}
 
 export interface VariantCurrentRendition {
     audio?: number;
@@ -12,7 +19,7 @@ export interface VariantCurrentRendition {
 
 export interface VariantProperties {
     uri: string;
-    isIFrameOnly: boolean;
+    variantType: VariantType;
     bandwidth: number;
     averageBandwidth: number;
     score: number;
@@ -20,7 +27,7 @@ export interface VariantProperties {
     resolution: Resolution;
     frameRate: number;
     hdcpLevel: string;
-    allowedCpc: boolean;
+    allowedCpc: Array<AllowedCpc>;
     videoRange: string;
     stableVariantId: string;
     audio: Rendition<'AUDIO'>[];
@@ -28,13 +35,13 @@ export interface VariantProperties {
     subtitles: Rendition<'SUBTITLES'>[];
     closedCaptions: Rendition<'CLOSED-CAPTIONS'>[];
     currentRenditions: VariantCurrentRendition;
-    playlist: MediaPlaylist;
+    playlist?: MediaPlaylist;
 }
 
 export type VariantConstructorOptionalProperties = Partial<
     Pick<
         VariantProperties,
-        | 'isIFrameOnly'
+        | 'variantType'
         | 'averageBandwidth'
         | 'score'
         | 'resolution'
@@ -59,7 +66,7 @@ export type VariantConstructorProperties = VariantConstructorOptionalProperties 
 
 export class Variant implements VariantProperties {
     public uri: string;
-    public isIFrameOnly: boolean;
+    public variantType: VariantType;
     public bandwidth: number;
     public averageBandwidth: number;
     public score: number;
@@ -67,7 +74,7 @@ export class Variant implements VariantProperties {
     public resolution: Resolution;
     public frameRate: number;
     public hdcpLevel: string;
-    public allowedCpc: boolean;
+    public allowedCpc: Array<AllowedCpc>;
     public videoRange: string;
     public stableVariantId: string;
     public audio: Rendition<'AUDIO'>[];
@@ -75,11 +82,11 @@ export class Variant implements VariantProperties {
     public subtitles: Rendition<'SUBTITLES'>[];
     public closedCaptions: Rendition<'CLOSED-CAPTIONS'>[];
     public currentRenditions: VariantCurrentRendition;
-    public playlist: MediaPlaylist;
+    public playlist?: MediaPlaylist;
 
     constructor({
         uri, // required
-        isIFrameOnly = false,
+        variantType = VariantType.Standard,
         bandwidth, // required
         averageBandwidth,
         score,
@@ -97,10 +104,9 @@ export class Variant implements VariantProperties {
         currentRenditions = { audio: 0, video: 0, subtitles: 0, closedCaptions: 0 },
         playlist,
     }: VariantConstructorProperties) {
-        // utils.PARAMCHECK(uri, bandwidth, codecs);
-        utils.PARAMCHECK(uri, bandwidth); // the spec states that CODECS is required but not true in the real world
+        utils.PARAMCHECK(variantType, uri, bandwidth); // the spec states that CODECS is required but not true in the real world
         this.uri = uri;
-        this.isIFrameOnly = isIFrameOnly;
+        this.variantType = variantType;
         this.bandwidth = bandwidth;
         this.averageBandwidth = averageBandwidth;
         this.score = score;
@@ -117,6 +123,18 @@ export class Variant implements VariantProperties {
         this.closedCaptions = closedCaptions;
         this.currentRenditions = currentRenditions;
         this.playlist = playlist;
+    }
+
+    get isStandardVariant(): boolean {
+        return this.variantType === VariantType.Standard;
+    }
+
+    get isIFrameVariant(): boolean {
+        return this.variantType === VariantType.IFrame;
+    }
+
+    get isImageVariant(): boolean {
+        return this.variantType === VariantType.Image;
     }
 }
 

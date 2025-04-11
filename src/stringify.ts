@@ -1,5 +1,21 @@
-import { Key } from './types';
+import {
+    ByteRange,
+    DateRange,
+    Key,
+    MasterPlaylist,
+    MediaPlaylist,
+    MediaPlaylistType,
+    PartialSegment,
+    Rendition,
+    RenditionType,
+    Segment,
+    SpliceInfo,
+    TransmitSpliceValue,
+} from './types';
 import * as utils from './utils';
+import SessionData from './types/SessionData';
+import Variant from './types/Variant';
+import MediaInitializationSection from './types/MediaInitializationSection';
 
 const ALLOW_REDUNDANCY = [
     '#EXTINF',
@@ -11,50 +27,63 @@ const ALLOW_REDUNDANCY = [
     '#EXT-X-TRANSMIT-CUE-OUT',
     '#EXT-X-KEY',
     '#EXT-X-MAP',
-];
+] as const;
 
-const SKIP_IF_REDUNDANT = ['#EXT-X-MEDIA'];
+const SKIP_IF_REDUNDANT = ['#EXT-X-MEDIA'] as const;
 
-class LineArray extends Array {
+class LineArray {
+    private lines: Array<string> = [];
+    private uniqueSet: Set<string> = new Set();
     public baseUri: string;
+
     constructor(baseUri) {
-        super();
         this.baseUri = baseUri;
     }
 
-    // @override
-    push(...elems): number {
-        // redundancy check
-        for (const elem of elems) {
-            if (!elem.startsWith('#')) {
-                super.push(elem);
-                continue;
-            }
-            if (ALLOW_REDUNDANCY.some((item) => elem.startsWith(item))) {
-                super.push(elem);
-                continue;
-            }
-            if (this.includes(elem)) {
-                if (SKIP_IF_REDUNDANT.some((item) => elem.startsWith(item))) {
-                    continue;
-                }
-                utils.INVALIDPLAYLIST(`Redundant item (${elem})`);
-            }
-            return super.push(elem);
+    [Symbol.iterator]() {
+        return this.lines[Symbol.iterator]();
+    }
+
+    push(elem: string): void {
+        // Always push URI's
+        if (!elem.startsWith('#')) {
+            this.lines.push(elem);
+            return;
         }
+
+        // Push lines that are allowed to be redundant
+        if (ALLOW_REDUNDANCY.some((item) => elem.startsWith(item))) {
+            this.lines.push(elem);
+            return;
+        }
+
+        // Check if the line is redundant
+        if (this.uniqueSet.has(elem)) {
+            // Check if we're supposed to skip this redundant line
+            if (SKIP_IF_REDUNDANT.some((item) => elem.startsWith(item))) {
+                return;
+            }
+
+            // If we don't skip it, throw/log an error
+            utils.INVALIDPLAYLIST(`Redundant item (${elem})`);
+        }
+
+        // Either unique or error ignored: add it to the list and unique set
+        this.lines.push(elem);
+        this.uniqueSet.add(elem);
     }
 }
 
-function buildDecimalFloatingNumber(num: number, fixed?: number) {
+function buildDecimalFloatingNumber(num: number, fixed?: number): string {
     let roundFactor = 1000;
     if (fixed) {
         roundFactor = 10 ** fixed;
     }
     const rounded = Math.round(num * roundFactor) / roundFactor;
-    return fixed ? rounded.toFixed(fixed) : rounded;
+    return fixed ? rounded.toFixed(fixed) : rounded.toString();
 }
 
-function getNumberOfDecimalPlaces(num) {
+function getNumberOfDecimalPlaces(num: number): number {
     const str = num.toString(10);
     const index = str.indexOf('.');
     if (index === -1) {
@@ -63,7 +92,7 @@ function getNumberOfDecimalPlaces(num) {
     return str.length - index - 1;
 }
 
-function buildMasterPlaylist(lines, playlist) {
+function buildMasterPlaylist(lines: LineArray, playlist: MasterPlaylist): void {
     for (const sessionData of playlist.sessionDataList) {
         lines.push(buildSessionData(sessionData));
     }
@@ -75,7 +104,7 @@ function buildMasterPlaylist(lines, playlist) {
     }
 }
 
-function buildSessionData(sessionData) {
+function buildSessionData(sessionData: SessionData): string {
     const attrs = [`DATA-ID="${sessionData.id}"`];
     if (sessionData.language) {
         attrs.push(`LANGUAGE="${sessionData.language}"`);
@@ -88,7 +117,7 @@ function buildSessionData(sessionData) {
     return `#EXT-X-SESSION-DATA:${attrs.join(',')}`;
 }
 
-function buildKey(key: Key, isSessionKey?: boolean) {
+function buildKey(key: Key, isSessionKey?: boolean): string {
     const name = isSessionKey ? '#EXT-X-SESSION-KEY' : '#EXT-X-KEY';
     const attrs = [`METHOD=${key.method}`];
     if (key.uri) {
@@ -109,13 +138,13 @@ function buildKey(key: Key, isSessionKey?: boolean) {
     return `${name}:${attrs.join(',')}`;
 }
 
-function buildVariant(lines, variant) {
-    const name = variant.isIFrameOnly ? '#EXT-X-I-FRAME-STREAM-INF' : '#EXT-X-STREAM-INF';
+function buildVariant(lines: LineArray, variant: Variant): void {
+    const name = `#${variant.variantType}`;
     const attrs = [`BANDWIDTH=${variant.bandwidth}`];
     if (variant.averageBandwidth) {
         attrs.push(`AVERAGE-BANDWIDTH=${variant.averageBandwidth}`);
     }
-    if (variant.isIFrameOnly) {
+    if (variant.isIFrameVariant || variant.isImageVariant) {
         attrs.push(`URI="${variant.uri}"`);
     }
     if (variant.codecs) {
@@ -173,12 +202,12 @@ function buildVariant(lines, variant) {
         attrs.push(`STABLE-VARIANT-ID="${variant.stableVariantId}"`);
     }
     lines.push(`${name}:${attrs.join(',')}`);
-    if (!variant.isIFrameOnly) {
+    if (variant.isStandardVariant) {
         lines.push(`${variant.uri}`);
     }
 }
 
-function buildRendition(rendition) {
+function buildRendition(rendition: Rendition<RenditionType>): string {
     const attrs = [`TYPE=${rendition.type}`, `GROUP-ID="${rendition.groupId}"`, `NAME="${rendition.name}"`];
     if (rendition.isDefault !== undefined) {
         attrs.push(`DEFAULT=${rendition.isDefault ? 'YES' : 'NO'}`);
@@ -210,7 +239,7 @@ function buildRendition(rendition) {
     return `#EXT-X-MEDIA:${attrs.join(',')}`;
 }
 
-function buildMediaPlaylist(lines, playlist) {
+function buildMediaPlaylist(lines: LineArray, playlist: MediaPlaylist): void {
     let lastKey = '';
     let lastMap = '';
     let unclosedCueIn = false;
@@ -245,8 +274,11 @@ function buildMediaPlaylist(lines, playlist) {
     if (playlist.playlistType) {
         lines.push(`#EXT-X-PLAYLIST-TYPE:${playlist.playlistType}`);
     }
-    if (playlist.isIFrame) {
-        lines.push(`#EXT-X-I-FRAMES-ONLY`);
+    if (playlist.isIFramePlaylist) {
+        lines.push(`#${MediaPlaylistType.IFrame}`);
+    }
+    if (playlist.isImagePlaylist) {
+        lines.push(`#${MediaPlaylistType.Image}`);
     }
     if (playlist.skip > 0) {
         lines.push(`#EXT-X-SKIP:SKIPPED-SEGMENTS=${playlist.skip}`);
@@ -285,7 +317,13 @@ function buildMediaPlaylist(lines, playlist) {
     }
 }
 
-function buildSegment(lines, segment, lastKey, lastMap, version = 1) {
+function buildSegment(
+    lines: LineArray,
+    segment: Segment,
+    lastKey: string,
+    lastMap: string,
+    version = 1,
+): [string, string] | [string, string, string] {
     let hint = false;
     let markerType = '';
 
@@ -329,11 +367,11 @@ function buildSegment(lines, segment, lastKey, lastMap, version = 1) {
     if (segment.byterange) {
         lines.push(`#EXT-X-BYTERANGE:${buildByteRange(segment.byterange)}`);
     }
-    Array.prototype.push.call(lines, `${segment.uri}`); // URIs could be redundant when EXT-X-BYTERANGE is used
+    lines.push(segment.uri);
     return [lastKey, lastMap, markerType];
 }
 
-function buildMap(map) {
+function buildMap(map: MediaInitializationSection): string {
     const attrs = [`URI="${map.uri}"`];
     if (map.byterange) {
         attrs.push(`BYTERANGE="${buildByteRange(map.byterange)}"`);
@@ -341,11 +379,11 @@ function buildMap(map) {
     return `#EXT-X-MAP:${attrs.join(',')}`;
 }
 
-function buildByteRange({ offset, length }) {
+function buildByteRange({ offset, length }: ByteRange): string {
     return `${length}@${offset}`;
 }
 
-function buildDateRange(dateRange) {
+function buildDateRange(dateRange: DateRange): string {
     const attrs = [`ID="${dateRange.id}"`];
     if (dateRange.start) {
         attrs.push(`START-DATE="${utils.formatDate(dateRange.start)}"`);
@@ -379,7 +417,7 @@ function buildDateRange(dateRange) {
     return `#EXT-X-DATERANGE:${attrs.join(',')}`;
 }
 
-function buildMarkers(lines, markers) {
+function buildMarkers(lines: LineArray, markers: Array<SpliceInfo>): string {
     let type = '';
     for (const marker of markers) {
         if (marker.type === 'OUT' && !marker.adProviderSpecificTag) {
@@ -387,7 +425,7 @@ function buildMarkers(lines, markers) {
             lines.push(`#EXT-X-CUE-OUT:DURATION=${marker.duration}`);
         } else if (marker.type === 'OUT' && marker.adProviderSpecificTag) {
             if (marker.adProviderSpecificTag === 'transmit') {
-                const { AdFormat, MaxDuration, KeepCreativeAudio, InsertionType } = marker.value;
+                const { AdFormat, MaxDuration, KeepCreativeAudio, InsertionType } = marker.value as TransmitSpliceValue;
                 type = 'OUT';
                 lines.push(
                     `#EXT-X-TRANSMIT-CUE-OUT:AdFormat=${AdFormat},MaxDuration=${MaxDuration},KeepCreativeAudio=${KeepCreativeAudio},InsertionType=${InsertionType}`,
@@ -404,7 +442,7 @@ function buildMarkers(lines, markers) {
     return type;
 }
 
-function buildParts(lines, parts) {
+function buildParts(lines: LineArray, parts: Array<PartialSegment>): boolean {
     let hint = false;
     for (const part of parts) {
         if (part.hint) {
@@ -437,7 +475,7 @@ function buildParts(lines, parts) {
     return hint;
 }
 
-export function stringify(playlist) {
+export function stringify(playlist: MediaPlaylist | MasterPlaylist): string {
     utils.PARAMCHECK(playlist);
     utils.ASSERT('Not a playlist', playlist.type === 'playlist');
     const lines = new LineArray(playlist.uri);
@@ -455,7 +493,7 @@ export function stringify(playlist) {
             }`,
         );
     }
-    if (playlist.isMasterPlaylist) {
+    if (playlist instanceof MasterPlaylist) {
         buildMasterPlaylist(lines, playlist);
     } else {
         buildMediaPlaylist(lines, playlist);
@@ -463,5 +501,5 @@ export function stringify(playlist) {
     // console.log('<<<');
     // console.log(lines.join('\n'));
     // console.log('>>>');
-    return lines.join('\n');
+    return Array.from(lines).join('\n');
 }

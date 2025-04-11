@@ -16,7 +16,7 @@ export interface RenditionProperties<T extends RenditionType> {
     instreamId: string;
     characteristics: string;
     channels: string;
-    playlist: MediaPlaylist;
+    playlist?: MediaPlaylist;
 }
 
 export type RenditionConstructorOptionalProperties<T extends RenditionType> = Partial<
@@ -56,7 +56,7 @@ export class Rendition<T extends RenditionType> implements RenditionProperties<T
     public instreamId: string;
     public characteristics: string;
     public channels: string;
-    public playlist: MediaPlaylist;
+    public playlist?: MediaPlaylist;
 
     constructor({
         type, // required
