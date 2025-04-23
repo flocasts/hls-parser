@@ -17,19 +17,22 @@ import SessionData from './types/SessionData';
 import Variant from './types/Variant';
 import MediaInitializationSection from './types/MediaInitializationSection';
 
-const ALLOW_REDUNDANCY = [
+const ALLOW_REDUNDANCY: Set<string> = new Set([
     '#EXTINF',
     '#EXT-X-BYTERANGE',
     '#EXT-X-DISCONTINUITY',
     '#EXT-X-STREAM-INF',
+    '#EXT-X-CUE-OUT-CONT',
     '#EXT-X-CUE-OUT',
     '#EXT-X-CUE-IN',
     '#EXT-X-TRANSMIT-CUE-OUT',
     '#EXT-X-KEY',
     '#EXT-X-MAP',
-] as const;
+]);
 
-const SKIP_IF_REDUNDANT = ['#EXT-X-MEDIA'] as const;
+const TAG_REGEX = /^(?<tag>#EXT[A-Z-]+).*$/;
+
+const SKIP_IF_REDUNDANT: Set<string> = new Set(['#EXT-X-MEDIA']);
 
 class LineArray {
     private lines: Array<string> = [];
@@ -51,8 +54,10 @@ class LineArray {
             return;
         }
 
+        const tag: string | undefined = TAG_REGEX.exec(elem)?.groups?.tag;
+
         // Push lines that are allowed to be redundant
-        if (ALLOW_REDUNDANCY.some((item) => elem.startsWith(item))) {
+        if (ALLOW_REDUNDANCY.has(tag)) {
             this.lines.push(elem);
             return;
         }
@@ -60,7 +65,7 @@ class LineArray {
         // Check if the line is redundant
         if (this.uniqueSet.has(elem)) {
             // Check if we're supposed to skip this redundant line
-            if (SKIP_IF_REDUNDANT.some((item) => elem.startsWith(item))) {
+            if (SKIP_IF_REDUNDANT.has(tag)) {
                 return;
             }
 
