@@ -7,8 +7,8 @@ import SegmentTransformer from '../transformers/SegmentTransformer';
 
 export enum MediaPlaylistType {
     Standard = 'STANDARD',
-    IFrame = 'EXT-X-IMAGES-ONLY',
-    Image = 'EXT-X-I-FRAMES-ONLY',
+    IFrame = 'EXT-X-I-FRAMES-ONLY',
+    Image = 'EXT-X-IMAGES-ONLY',
 }
 
 export interface LowLatencyCompatibility {

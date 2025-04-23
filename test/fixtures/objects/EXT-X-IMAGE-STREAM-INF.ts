@@ -1,9 +1,9 @@
-import {MasterPlaylist, Rendition, Variant, RenditionType, VariantType} from '../../../src/types';
+import { MasterPlaylist, Rendition, Variant, VariantType } from '../../../src/types';
 
 const playlist = new MasterPlaylist({
     variants: createVariants(),
     independentSegments: true,
-    version: 4
+    version: 4,
 });
 
 function createVariants() {
@@ -27,7 +27,7 @@ function createVariants() {
             averageBandwidth: 3511200,
             codecs: 'avc1.64001f,mp4a.40.2',
             resolution: { width: 1280, height: 720 },
-            frameRate: 30.000,
+            frameRate: 30.0,
             audio,
         }),
     );
@@ -39,7 +39,7 @@ function createVariants() {
             averageBandwidth: 1650000,
             codecs: 'avc1.64001f',
             resolution: { width: 1280, height: 720 },
-            frameRate: 30.000,
+            frameRate: 30.0,
         }),
     );
     variants.push(
@@ -49,9 +49,8 @@ function createVariants() {
             averageBandwidth: 2081200,
             codecs: 'avc1.4d401f,mp4a.40.2',
             resolution: { width: 960, height: 540 },
-            frameRate: 30.000,
+            frameRate: 30.0,
             audio,
-
         }),
     );
     variants.push(
@@ -60,7 +59,7 @@ function createVariants() {
             averageBandwidth: 935000,
             codecs: 'avc1.4d401f',
             resolution: { width: 960, height: 540 },
-            frameRate: 30.000,
+            frameRate: 30.0,
             variantType: VariantType.IFrame,
             uri: 'index_video_1700_I-Frame.m3u8',
         }),
@@ -72,7 +71,7 @@ function createVariants() {
             uri: 'index_video_1000.m3u8',
             codecs: 'avc1.4d401f,mp4a.40.2',
             resolution: { width: 800, height: 450 },
-            frameRate: 30.000,
+            frameRate: 30.0,
             audio,
         }),
     );
@@ -83,7 +82,7 @@ function createVariants() {
             codecs: 'avc1.4d401f',
             variantType: VariantType.IFrame,
             resolution: { width: 800, height: 450 },
-            frameRate: 30.000,
+            frameRate: 30.0,
             uri: 'index_video_1000_I-Frame.m3u8',
         }),
     );
@@ -94,7 +93,7 @@ function createVariants() {
             uri: 'index_video_500.m3u8',
             codecs: 'avc1.77.30,mp4a.40.2',
             resolution: { width: 640, height: 360 },
-            frameRate: 30.000,
+            frameRate: 30.0,
             audio,
         }),
     );
@@ -105,7 +104,7 @@ function createVariants() {
             codecs: 'avc1.77.30',
             variantType: VariantType.IFrame,
             resolution: { width: 640, height: 360 },
-            frameRate: 30.000,
+            frameRate: 30.0,
             uri: 'index_video_500_I-Frame.m3u8',
         }),
     );
@@ -116,7 +115,7 @@ function createVariants() {
             uri: 'index_video_300.m3u8',
             codecs: 'avc1.77.30,mp4a.40.2',
             resolution: { width: 480, height: 270 },
-            frameRate: 30.000,
+            frameRate: 30.0,
             audio,
         }),
     );
@@ -127,7 +126,7 @@ function createVariants() {
             codecs: 'avc1.77.30',
             variantType: VariantType.IFrame,
             resolution: { width: 480, height: 270 },
-            frameRate: 30.000,
+            frameRate: 30.0,
             uri: 'index_video_300_I-Frame.m3u8',
         }),
     );

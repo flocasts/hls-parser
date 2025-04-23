@@ -165,6 +165,7 @@ function getTagCategory(tagName: TagName | string): TagCategory {
         case 'EXT-X-MEDIA':
         case 'EXT-X-STREAM-INF':
         case 'EXT-X-I-FRAME-STREAM-INF':
+        case 'EXT-X-IMAGE-STREAM-INF':
         case 'EXT-X-SESSION-DATA':
         case 'EXT-X-SESSION-KEY':
             return 'MasterPlaylist';
