@@ -30,8 +30,6 @@ const ALLOW_REDUNDANCY: Set<string> = new Set([
     '#EXT-X-MAP',
 ]);
 
-const TAG_REGEX = /^(?<tag>#EXT[A-Z-]+).*$/;
-
 const SKIP_IF_REDUNDANT: Set<string> = new Set(['#EXT-X-MEDIA']);
 
 class LineArray {
@@ -54,7 +52,7 @@ class LineArray {
             return;
         }
 
-        const tag: string | undefined = TAG_REGEX.exec(elem)?.groups?.tag;
+        const tag: string | undefined = elem.split(':')[0];
 
         // Push lines that are allowed to be redundant
         if (ALLOW_REDUNDANCY.has(tag)) {
