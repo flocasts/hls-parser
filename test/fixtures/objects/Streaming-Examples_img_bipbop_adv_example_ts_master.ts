@@ -1,4 +1,4 @@
-import { MasterPlaylist, Variant, Rendition } from '../../../src/types';
+import { MasterPlaylist, Rendition, Variant, VariantType } from '../../../src/types';
 
 const renditions = {
     aud1: [
@@ -385,7 +385,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'v7/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 186522,
             averageBandwidth: 182077,
             codecs: 'avc1.64002a',
@@ -395,7 +395,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'v6/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 133856,
             averageBandwidth: 129936,
             codecs: 'avc1.640020',
@@ -405,7 +405,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'v5/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 98136,
             averageBandwidth: 94286,
             codecs: 'avc1.640020',
@@ -415,7 +415,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'v4/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 76704,
             averageBandwidth: 74767,
             codecs: 'avc1.64001e',
@@ -425,7 +425,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'v3/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 64078,
             averageBandwidth: 62251,
             codecs: 'avc1.64001e',
@@ -435,7 +435,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'v2/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 38728,
             averageBandwidth: 37866,
             codecs: 'avc1.640015',

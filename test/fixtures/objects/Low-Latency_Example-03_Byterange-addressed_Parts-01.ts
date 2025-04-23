@@ -1,4 +1,4 @@
-import { MediaPlaylist, Segment, PartialSegment } from '../../../src/types';
+import { MediaPlaylist, PartialSegment, Segment } from '../../../src/types';
 
 const playlist = new MediaPlaylist({
     version: 9,
@@ -32,6 +32,8 @@ function createSegments() {
     );
     segments.push(
         new Segment({
+            uri: 'fileSequence271.mp4',
+            duration: 4.00008,
             mediaSequenceNumber: 271,
             parts: createParts(),
         }),

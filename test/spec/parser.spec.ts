@@ -1,8 +1,16 @@
 import fixtures from '../helpers/fixtures';
 import * as HLS from '../../src/index';
-import {MasterPlaylist, MediaPlaylist} from "../../src/types";
-import toEqualDateRange from "../jest-matchers/toEqualDateRange";
-import {Segment, Variant, Rendition, SessionData, Key, RenditionType, MediaInitializationSection} from "../../src/types";
+import { MasterPlaylist, MediaPlaylist } from '../../src/types';
+import toEqualDateRange from '../jest-matchers/toEqualDateRange';
+import {
+    Segment,
+    Variant,
+    Rendition,
+    SessionData,
+    Key,
+    RenditionType,
+    MediaInitializationSection,
+} from '../../src/types';
 
 expect.extend({ toEqualDateRange });
 
@@ -24,10 +32,10 @@ describe('parser', () => {
 
 function buildMessage(propName, actual, expected) {
     if (actual && typeof actual === 'object') {
-        actual = JSON.parse(actual);
+        actual = JSON.stringify(actual, null, 2);
     }
     if (expected && typeof expected === 'object') {
-        expected = JSON.parse(expected);
+        expected = JSON.stringify(expected, null, 2);
     }
     return `
 ${propName} does not match.
@@ -51,7 +59,9 @@ function deepEqual(actual: MediaOrMasterPlaylist, expected: MediaOrMasterPlaylis
         expect.fail(buildMessage('Playlist.version', actual.version, expected.version));
     }
     if (actual.independentSegments !== expected.independentSegments) {
-        expect.fail(buildMessage('Playlist.independentSegments', actual.independentSegments, expected.independentSegments));
+        expect.fail(
+            buildMessage('Playlist.independentSegments', actual.independentSegments, expected.independentSegments),
+        );
     }
     if (actual.start?.offset !== expected.start?.offset) {
         expect.fail(buildMessage('Playlist.start.offset', actual.start.offset, expected.start.offset));
@@ -79,7 +89,9 @@ function deepEqual(actual: MediaOrMasterPlaylist, expected: MediaOrMasterPlaylis
 
         if (expected.sessionDataList) {
             if (!actual.sessionDataList || actual.sessionDataList.length !== expected.sessionDataList.length) {
-                expect.fail(buildMessage('MasterPlaylist.sessionDataList', actual.sessionDataList, expected.sessionDataList));
+                expect.fail(
+                    buildMessage('MasterPlaylist.sessionDataList', actual.sessionDataList, expected.sessionDataList),
+                );
             }
             for (const [index, actualSessionData] of actual.sessionDataList.entries()) {
                 deepEqualSessionData(actualSessionData, expected.sessionDataList[index]);
@@ -87,7 +99,9 @@ function deepEqual(actual: MediaOrMasterPlaylist, expected: MediaOrMasterPlaylis
         }
         if (expected.sessionKeyList) {
             if (!actual.sessionKeyList || actual.sessionKeyList.length !== expected.sessionKeyList.length) {
-                expect.fail(buildMessage('MasterPlaylist.sessionKeyList', actual.sessionKeyList, expected.sessionKeyList));
+                expect.fail(
+                    buildMessage('MasterPlaylist.sessionKeyList', actual.sessionKeyList, expected.sessionKeyList),
+                );
             }
             for (const [index, actualSessionKey] of actual.sessionKeyList.entries()) {
                 deepEqualKey(actualSessionKey, expected.sessionKeyList[index]);
@@ -107,7 +121,9 @@ function deepEqual(actual: MediaOrMasterPlaylist, expected: MediaOrMasterPlaylis
             expect.fail(buildMessage('MediaPlaylist.targetDuration', actual.targetDuration, expected.targetDuration));
         }
         if (actual.mediaSequenceBase !== expected.mediaSequenceBase) {
-            expect.fail(buildMessage('MediaPlaylist.mediaSequenceBase', actual.mediaSequenceBase, expected.mediaSequenceBase));
+            expect.fail(
+                buildMessage('MediaPlaylist.mediaSequenceBase', actual.mediaSequenceBase, expected.mediaSequenceBase),
+            );
         }
         if (actual.discontinuitySequenceBase !== expected.discontinuitySequenceBase) {
             expect.fail(
@@ -124,8 +140,8 @@ function deepEqual(actual: MediaOrMasterPlaylist, expected: MediaOrMasterPlaylis
         if (actual.playlistType !== expected.playlistType) {
             expect.fail(buildMessage('MediaPlaylist.playlistType', actual.playlistType, expected.playlistType));
         }
-        if (actual.isIFrame !== expected.isIFrame) {
-            expect.fail(buildMessage('MediaPlaylist.isIFrame', actual.isIFrame, expected.isIFrame));
+        if (actual.isIFramePlaylist !== expected.isIFramePlaylist) {
+            expect.fail(buildMessage('MediaPlaylist.isIFrame', actual.isIFramePlaylist, expected.isIFramePlaylist));
         }
         if (expected.segments) {
             if (!actual.segments || actual.segments.length !== expected.segments.length) {
@@ -150,8 +166,8 @@ function deepEqualVariant(actual: Variant, expected: Variant) {
             expect.fail(buildMessage('Variant.uri', actual.uri, expected.uri));
         }
     }
-    if (actual.isIFrameOnly !== expected.isIFrameOnly) {
-        expect.fail(buildMessage('Variant.isIFrameOnly', actual.isIFrameOnly, expected.isIFrameOnly));
+    if (actual.isIFrameVariant !== expected.isIFrameVariant) {
+        expect.fail(buildMessage('Variant.isIFrameOnly', actual.isIFrameVariant, expected.isIFrameVariant));
     }
     if (actual.bandwidth !== expected.bandwidth) {
         expect.fail(buildMessage('Variant.bandwidth', actual.bandwidth, expected.bandwidth));
@@ -314,7 +330,9 @@ function deepEqualSegment(actual: Segment, expected: Segment) {
         expect.fail(buildMessage('Segment.discontinuity', actual.discontinuity, expected.discontinuity));
     }
     if (actual.mediaSequenceNumber !== expected.mediaSequenceNumber) {
-        expect.fail(buildMessage('Segment.mediaSequenceNumber', actual.mediaSequenceNumber, expected.mediaSequenceNumber));
+        expect.fail(
+            buildMessage('Segment.mediaSequenceNumber', actual.mediaSequenceNumber, expected.mediaSequenceNumber),
+        );
     }
     if (actual.discontinuitySequence !== expected.discontinuitySequence) {
         expect.fail(

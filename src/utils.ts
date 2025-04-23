@@ -154,7 +154,7 @@ export function splitByCommaWithPreservingQuotes(str: string): string[] {
     return list;
 }
 
-export function camelify(str): string {
+export function camelify(str: string): string {
     const array: string[] = [];
     let nextUpper = false;
     for (const ch of str) {

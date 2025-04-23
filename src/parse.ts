@@ -1,21 +1,27 @@
 import * as utils from './utils';
 import {
-    Rendition,
-    Variant,
-    SessionData,
-    Key,
-    MediaInitializationSection,
+    ByteRange,
     DateRange,
-    SpliceInfo,
+    Key,
+    LowLatencyCompatibility,
     MasterPlaylist,
+    MediaInitializationSection,
     MediaPlaylist,
-    Segment,
+    MediaPlaylistType,
     PartialSegment,
     Playlist,
+    PlaylistStart,
     PrefetchSegment,
+    Rendition,
     RenditionReport,
-    ByteRange,
+    RenditionType,
     Resolution,
+    Segment,
+    SessionData,
+    SpliceInfo,
+    TransmitSpliceValue,
+    Variant,
+    VariantType,
 } from './types';
 import PlaylistTransformer from './transformers/PlaylistTransformer';
 import SegmentTransformer from './transformers/SegmentTransformer';
@@ -36,7 +42,7 @@ export interface ParseParams extends UserParseParams {
 }
 
 export interface Tag {
-    name: string;
+    name: TagName;
     category: TagCategory;
     value: unknown;
     attributes: Attributes;
@@ -71,6 +77,7 @@ export type TagName =
     | 'EXT-X-ENDLIST'
     | 'EXT-X-PLAYLIST-TYPE'
     | 'EXT-X-I-FRAMES-ONLY'
+    | 'EXT-X-IMAGES-ONLY'
     | 'EXT-X-SERVER-CONTROL'
     | 'EXT-X-PART-INF'
     | 'EXT-X-PREFETCH'
@@ -80,13 +87,14 @@ export type TagName =
     | 'EXT-X-MEDIA'
     | 'EXT-X-STREAM-INF'
     | 'EXT-X-I-FRAME-STREAM-INF'
+    | 'EXT-X-IMAGE-STREAM-INF'
     | 'EXT-X-SESSION-DATA'
     | 'EXT-X-SESSION-KEY'
     // MediaorMasterPlaylist
     | 'EXT-X-INDEPENDENT-SEGMENTS'
     | 'EXT-X-START';
 
-export type LexicalLines = [Tag, ...(Tag | string)[]];
+export type Line = string | Tag;
 
 export type TagCategory =
     | 'Basic'
@@ -147,6 +155,7 @@ function getTagCategory(tagName: TagName | string): TagCategory {
         case 'EXT-X-ENDLIST':
         case 'EXT-X-PLAYLIST-TYPE':
         case 'EXT-X-I-FRAMES-ONLY':
+        case 'EXT-X-IMAGES-ONLY':
         case 'EXT-X-SERVER-CONTROL':
         case 'EXT-X-PART-INF':
         case 'EXT-X-PREFETCH':
@@ -156,6 +165,7 @@ function getTagCategory(tagName: TagName | string): TagCategory {
         case 'EXT-X-MEDIA':
         case 'EXT-X-STREAM-INF':
         case 'EXT-X-I-FRAME-STREAM-INF':
+        case 'EXT-X-IMAGE-STREAM-INF':
         case 'EXT-X-SESSION-DATA':
         case 'EXT-X-SESSION-KEY':
             return 'MasterPlaylist';
@@ -171,6 +181,8 @@ export interface AllowedCpc {
     format: string;
     cpcList: string[];
 }
+
+export type UserAttribute = number | string | Uint8Array;
 
 function parseEXTINF(param: string): ExtInf {
     const pair = utils.splitAt(param, ',');
@@ -213,7 +225,7 @@ function parseIV(str: string): Buffer {
     return iv;
 }
 
-function parseUserAttribute(str: string): string | number | Buffer {
+function parseUserAttribute(str: string): UserAttribute {
     if (str.startsWith('"')) {
         return unquote(str);
     }
@@ -223,7 +235,7 @@ function parseUserAttribute(str: string): string | number | Buffer {
     return utils.toNumber(str);
 }
 
-function setCompatibleVersionOfKey(params, attributes): void {
+function setCompatibleVersionOfKey(params: ParseParams, attributes: Attributes): void {
     if (attributes['IV'] && params.compatibleVersion < 2) {
         params.compatibleVersion = 2;
     }
@@ -307,6 +319,7 @@ function parseTagParam(name: TagName, param: string): TagParams {
         case 'EXT-X-DISCONTINUITY':
         case 'EXT-X-ENDLIST':
         case 'EXT-X-I-FRAMES-ONLY':
+        case 'EXT-X-IMAGES-ONLY':
         case 'EXT-X-INDEPENDENT-SEGMENTS':
         case 'EXT-X-CUE-IN':
             return [null, null];
@@ -329,6 +342,7 @@ function parseTagParam(name: TagName, param: string): TagParams {
         case 'EXT-X-MEDIA':
         case 'EXT-X-STREAM-INF':
         case 'EXT-X-I-FRAME-STREAM-INF':
+        case 'EXT-X-IMAGE-STREAM-INF':
         case 'EXT-X-SESSION-DATA':
         case 'EXT-X-SESSION-KEY':
         case 'EXT-X-START':
@@ -358,7 +372,7 @@ function MIXEDTAGS(): void {
     utils.INVALIDPLAYLIST(`The file contains both media and master playlist tags.`);
 }
 
-function splitTag(line: string): [TagName, null] | [TagName, string] {
+function splitTag(line: string): [TagName, string | null] {
     const index = line.indexOf(':');
     if (index === -1) {
         return [line.slice(1).trim() as TagName, null];
@@ -366,25 +380,28 @@ function splitTag(line: string): [TagName, null] | [TagName, string] {
     return [line.slice(1, index).trim() as TagName, line.slice(index + 1).trim()];
 }
 
-function parseRendition({ attributes }) {
+function parseRendition({ attributes }: Tag): Rendition<RenditionType> {
     const rendition = new Rendition({
-        type: attributes['TYPE'],
-        uri: attributes['URI'],
-        groupId: attributes['GROUP-ID'],
-        language: attributes['LANGUAGE'],
-        assocLanguage: attributes['ASSOC-LANGUAGE'],
-        name: attributes['NAME'],
-        isDefault: attributes['DEFAULT'],
-        autoselect: attributes['AUTOSELECT'],
-        forced: attributes['FORCED'],
-        instreamId: attributes['INSTREAM-ID'],
-        characteristics: attributes['CHARACTERISTICS'],
-        channels: attributes['CHANNELS'],
+        type: attributes['TYPE'] as Rendition<RenditionType>['type'],
+        uri: attributes['URI'] as Rendition<RenditionType>['uri'],
+        groupId: attributes['GROUP-ID'] as Rendition<RenditionType>['groupId'],
+        language: attributes['LANGUAGE'] as Rendition<RenditionType>['language'],
+        assocLanguage: attributes['ASSOC-LANGUAGE'] as Rendition<RenditionType>['assocLanguage'],
+        name: attributes['NAME'] as Rendition<RenditionType>['name'],
+        isDefault: attributes['DEFAULT'] as Rendition<RenditionType>['isDefault'],
+        autoselect: attributes['AUTOSELECT'] as Rendition<RenditionType>['autoselect'],
+        forced: attributes['FORCED'] as Rendition<RenditionType>['forced'],
+        instreamId: attributes['INSTREAM-ID'] as Rendition<RenditionType>['instreamId'],
+        characteristics: attributes['CHARACTERISTICS'] as Rendition<RenditionType>['characteristics'],
+        channels: attributes['CHANNELS'] as Rendition<RenditionType>['channels'],
     });
     return rendition;
 }
 
-function checkRedundantRendition(renditions, rendition) {
+function checkRedundantRendition(
+    renditions: Array<Rendition<RenditionType>>,
+    rendition: Rendition<RenditionType>,
+): string {
     let defaultFound = false;
     for (const item of renditions) {
         if (item.name === rendition.name) {
@@ -400,7 +417,7 @@ function checkRedundantRendition(renditions, rendition) {
     return '';
 }
 
-function addRendition(variant, line, type) {
+function addRendition(variant: Variant, line: Tag, type: string): void {
     const rendition = parseRendition(line);
     const renditions = variant[utils.camelify(type)];
     const errorMessage = checkRedundantRendition(renditions, rendition);
@@ -413,7 +430,7 @@ function addRendition(variant, line, type) {
     }
 }
 
-function matchTypes(attrs, variant, params) {
+function matchTypes(attrs: Attributes, variant: Variant, params: ParseParams) {
     for (const type of ['AUDIO', 'VIDEO', 'SUBTITLES', 'CLOSED-CAPTIONS']) {
         if (type === 'CLOSED-CAPTIONS' && attrs[type] === 'NONE') {
             params.isClosedCaptionsNone = true;
@@ -426,24 +443,35 @@ function matchTypes(attrs, variant, params) {
     }
 }
 
-function parseVariant(lines, variantAttrs, uri, iFrameOnly, params) {
+function parseVariant<T extends VariantType>(
+    lines: Array<Line>,
+    variantAttrs: Attributes,
+    uri: string,
+    variantType: T,
+    params: ParseParams,
+): Variant {
     const variant = new Variant({
         uri,
-        bandwidth: variantAttrs['BANDWIDTH'],
-        averageBandwidth: variantAttrs['AVERAGE-BANDWIDTH'],
-        score: variantAttrs['SCORE'],
-        codecs: variantAttrs['CODECS'],
-        resolution: variantAttrs['RESOLUTION'],
-        frameRate: variantAttrs['FRAME-RATE'],
-        hdcpLevel: variantAttrs['HDCP-LEVEL'],
-        allowedCpc: variantAttrs['ALLOWED-CPC'],
-        videoRange: variantAttrs['VIDEO-RANGE'],
-        stableVariantId: variantAttrs['STABLE-VARIANT-ID'],
+        variantType,
+        bandwidth: variantAttrs['BANDWIDTH'] as Variant['bandwidth'],
+        averageBandwidth: variantAttrs['AVERAGE-BANDWIDTH'] as Variant['averageBandwidth'],
+        score: variantAttrs['SCORE'] as Variant['score'],
+        codecs: variantAttrs['CODECS'] as Variant['codecs'],
+        resolution: variantAttrs['RESOLUTION'] as Variant['resolution'],
+        frameRate: variantAttrs['FRAME-RATE'] as Variant['frameRate'],
+        hdcpLevel: variantAttrs['HDCP-LEVEL'] as Variant['hdcpLevel'],
+        allowedCpc: variantAttrs['ALLOWED-CPC'] as Variant['allowedCpc'],
+        videoRange: variantAttrs['VIDEO-RANGE'] as Variant['videoRange'],
+        stableVariantId: variantAttrs['STABLE-VARIANT-ID'] as Variant['stableVariantId'],
     });
+
     for (const line of lines) {
+        if (typeof line === 'string') {
+            continue; // ignore URI's
+        }
         if (line.name === 'EXT-X-MEDIA') {
             const renditionAttrs = line.attributes;
-            const renditionType = renditionAttrs['TYPE'];
+            const renditionType = renditionAttrs['TYPE'] as RenditionType;
             if (!renditionType || !renditionAttrs['GROUP-ID']) {
                 utils.INVALIDPLAYLIST('EXT-X-MEDIA TYPE attribute is REQUIRED.');
             }
@@ -461,11 +489,10 @@ function parseVariant(lines, variantAttrs, uri, iFrameOnly, params) {
         }
     }
     matchTypes(variantAttrs, variant, params);
-    variant.isIFrameOnly = iFrameOnly;
     return variant;
 }
 
-function sameKey(key1, key2) {
+function sameKey(key1: Key, key2: Key): boolean {
     if (key1.method !== key2.method) {
         return false;
     }
@@ -496,18 +523,22 @@ function sameKey(key1, key2) {
     return true;
 }
 
-function parseMasterPlaylist(lines, params: ParseParams): MasterPlaylist {
+function parseMasterPlaylist(lines: Array<Line>, params: ParseParams): MasterPlaylist {
     const playlist = new MasterPlaylist();
     let variantIsScored = false;
-    for (const [index, { name, value, attributes }] of lines.entries()) {
+    for (const [index, line] of lines.entries()) {
+        if (typeof line === 'string') {
+            continue; // Skip the uri lines
+        }
+        const { name, value, attributes } = line;
         if (name === 'EXT-X-VERSION') {
-            playlist.version = value;
-        } else if (name === 'EXT-X-STREAM-INF') {
+            playlist.version = value as number;
+        } else if (name === VariantType.Standard) {
             const uri = lines[index + 1];
             if (typeof uri !== 'string' || uri.startsWith('#EXT')) {
                 utils.INVALIDPLAYLIST('EXT-X-STREAM-INF must be followed by a URI line');
             }
-            const variant = parseVariant(lines, attributes, uri, false, params);
+            const variant = parseVariant(lines, attributes, uri as string, VariantType.Standard, params);
             if (variant) {
                 if (typeof variant.score === 'number') {
                     variantIsScored = true;
@@ -519,17 +550,22 @@ function parseMasterPlaylist(lines, params: ParseParams): MasterPlaylist {
                 }
                 playlist.variants.push(variant);
             }
-        } else if (name === 'EXT-X-I-FRAME-STREAM-INF') {
-            const variant = parseVariant(lines, attributes, attributes.URI, true, params);
+        } else if (name === VariantType.IFrame || name === VariantType.Image) {
+            const variantType = name === VariantType.IFrame ? VariantType.IFrame : VariantType.Image;
+            const uri: string = attributes.URI as string;
+            if (!uri) {
+                utils.INVALIDPLAYLIST(`${variantType} must contain a URI attribute`);
+            }
+            const variant = parseVariant(lines, attributes, uri, variantType, params);
             if (variant) {
                 playlist.variants.push(variant);
             }
         } else if (name === 'EXT-X-SESSION-DATA') {
             const sessionData = new SessionData({
-                id: attributes['DATA-ID'],
-                value: attributes['VALUE'],
-                uri: attributes['URI'],
-                language: attributes['LANGUAGE'],
+                id: attributes['DATA-ID'] as SessionData['id'],
+                value: attributes['VALUE'] as SessionData['value'],
+                uri: attributes['URI'] as SessionData['uri'],
+                language: attributes['LANGUAGE'] as SessionData['language'],
             });
             if (
                 playlist.sessionDataList.some(
@@ -546,11 +582,11 @@ function parseMasterPlaylist(lines, params: ParseParams): MasterPlaylist {
                 utils.INVALIDPLAYLIST('EXT-X-SESSION-KEY: The value of the METHOD attribute MUST NOT be NONE');
             }
             const sessionKey = new Key({
-                method: attributes['METHOD'],
-                uri: attributes['URI'],
-                iv: attributes['IV'],
-                format: attributes['KEYFORMAT'],
-                formatVersion: attributes['KEYFORMATVERSIONS'],
+                method: attributes['METHOD'] as Key['method'],
+                uri: attributes['URI'] as Key['uri'],
+                iv: attributes['IV'] as Key['iv'],
+                format: attributes['KEYFORMAT'] as Key['format'],
+                formatVersion: attributes['KEYFORMATVERSIONS'] as Key['formatVersion'],
             });
             if (playlist.sessionKeyList.some((item) => sameKey(item, sessionKey))) {
                 utils.INVALIDPLAYLIST(
@@ -571,7 +607,10 @@ function parseMasterPlaylist(lines, params: ParseParams): MasterPlaylist {
             if (typeof attributes['TIME-OFFSET'] !== 'number') {
                 utils.INVALIDPLAYLIST('EXT-X-START: TIME-OFFSET attribute is REQUIRED');
             }
-            playlist.start = { offset: attributes['TIME-OFFSET'], precise: attributes['PRECISE'] || false };
+            playlist.start = {
+                offset: attributes['TIME-OFFSET'] as PlaylistStart['offset'],
+                precise: (attributes['PRECISE'] ?? false) as PlaylistStart['precise'],
+            };
         }
     }
     if (variantIsScored) {
@@ -602,23 +641,35 @@ function parseMasterPlaylist(lines, params: ParseParams): MasterPlaylist {
     return playlist;
 }
 
-function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuitySequence, params) {
+function parseSegment(
+    lines: Array<Line>,
+    uri: string,
+    start: number,
+    end: number,
+    mediaSequenceNumber: number,
+    discontinuitySequence: number,
+    params: ParseParams,
+): Segment {
     const segment = new Segment({ uri, mediaSequenceNumber, discontinuitySequence, duration: -0 });
     let mapHint = false;
     let partHint = false;
     for (let i = start; i <= end; i++) {
-        const { name, value, attributes } = lines[i];
+        const currentLine = lines[i];
+        if (typeof currentLine === 'string') {
+            continue; // Skip the uri lines
+        }
+        const { name, value, attributes } = currentLine;
         if (name === 'EXTINF') {
-            if (!Number.isInteger(value.duration) && params.compatibleVersion < 3) {
+            if (!Number.isInteger(value['duration']) && params.compatibleVersion < 3) {
                 params.compatibleVersion = 3;
             }
-            if (Math.round(value.duration) > params.targetDuration) {
+            if (Math.round(value['duration']) > params.targetDuration) {
                 utils.INVALIDPLAYLIST(
                     'EXTINF duration, when rounded to the nearest integer, MUST be less than or equal to the target duration',
                 );
             }
-            segment.duration = value.duration;
-            segment.title = value.title;
+            segment.duration = value['duration'];
+            segment.title = value['title'];
         } else if (name === 'EXT-X-BYTERANGE') {
             if (params.compatibleVersion < 4) {
                 params.compatibleVersion = 4;
@@ -637,11 +688,11 @@ function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuity
             }
             setCompatibleVersionOfKey(params, attributes);
             segment.key = new Key({
-                method: attributes['METHOD'],
-                uri: attributes['URI'],
-                iv: attributes['IV'],
-                format: attributes['KEYFORMAT'],
-                formatVersion: attributes['KEYFORMATVERSIONS'],
+                method: attributes['METHOD'] as Key['method'],
+                uri: attributes['URI'] as Key['uri'],
+                iv: attributes['IV'] as Key['iv'],
+                format: attributes['KEYFORMAT'] as Key['format'],
+                formatVersion: attributes['KEYFORMATVERSIONS'] as Key['formatVersion'],
             });
         } else if (name === 'EXT-X-MAP') {
             if (segment.parts.length > 0) {
@@ -652,11 +703,11 @@ function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuity
             }
             params.hasMap = true;
             segment.map = new MediaInitializationSection({
-                uri: attributes['URI'],
-                byterange: attributes['BYTERANGE'],
+                uri: attributes['URI'] as MediaInitializationSection['uri'],
+                byterange: attributes['BYTERANGE'] as MediaInitializationSection['byterange'],
             });
         } else if (name === 'EXT-X-PROGRAM-DATE-TIME') {
-            segment.programDateTime = value;
+            segment.programDateTime = value as Segment['programDateTime'];
         } else if (name === 'EXT-X-DATERANGE') {
             const attrs = {};
             for (const key of Object.keys(attributes)) {
@@ -665,29 +716,29 @@ function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuity
                 }
             }
             segment.dateRange = new DateRange({
-                id: attributes['ID'],
-                classId: attributes['CLASS'],
-                start: attributes['START-DATE'],
-                end: attributes['END-DATE'],
-                duration: attributes['DURATION'],
-                plannedDuration: attributes['PLANNED-DURATION'],
-                endOnNext: attributes['END-ON-NEXT'],
+                id: attributes['ID'] as DateRange['id'],
+                classId: attributes['CLASS'] as DateRange['classId'],
+                start: attributes['START-DATE'] as DateRange['start'],
+                end: attributes['END-DATE'] as DateRange['end'],
+                duration: attributes['DURATION'] as DateRange['duration'],
+                plannedDuration: attributes['PLANNED-DURATION'] as DateRange['plannedDuration'],
+                endOnNext: attributes['END-ON-NEXT'] as DateRange['endOnNext'],
                 attributes: attrs,
             });
         } else if (name === 'EXT-X-CUE-OUT') {
             segment.markers.push(
                 new SpliceInfo({
                     type: 'OUT',
-                    duration: (attributes && attributes.DURATION) || value,
+                    duration: (attributes?.DURATION ?? value) as SpliceInfo['duration'],
                 }),
             );
         } else if (name === 'EXT-X-TRANSMIT-CUE-OUT') {
             segment.markers.push(
                 new SpliceInfo({
                     type: 'OUT',
-                    duration: (attributes && attributes.MaxDuration) || value,
+                    duration: (attributes?.MaxDuration ?? value) as SpliceInfo['duration'],
                     adProviderSpecificTag: 'transmit',
-                    value: attributes,
+                    value: attributes as unknown as TransmitSpliceValue,
                 }),
             );
         } else if (name === 'EXT-X-CUE-IN') {
@@ -707,7 +758,7 @@ function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuity
                 new SpliceInfo({
                     type: 'RAW',
                     tagName: name,
-                    value,
+                    value: value as string,
                 }),
             );
         } else if (name === 'EXT-X-PRELOAD-HINT' && !attributes['TYPE']) {
@@ -728,8 +779,11 @@ function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuity
             params.hasMap = true;
             segment.map = new MediaInitializationSection({
                 hint: true,
-                uri: attributes['URI'],
-                byterange: { length: attributes['BYTERANGE-LENGTH'], offset: attributes['BYTERANGE-START'] || 0 },
+                uri: attributes['URI'] as MediaInitializationSection['uri'],
+                byterange: {
+                    length: attributes['BYTERANGE-LENGTH'] as ByteRange['length'],
+                    offset: (attributes['BYTERANGE-START'] ?? 0) as ByteRange['offset'],
+                },
             });
         } else if (name === 'EXT-X-PART' || (name === 'EXT-X-PRELOAD-HINT' && attributes['TYPE'] === 'PART')) {
             if (name === 'EXT-X-PART' && !attributes['DURATION']) {
@@ -740,14 +794,17 @@ function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuity
             }
             const partialSegment = new PartialSegment({
                 hint: name === 'EXT-X-PRELOAD-HINT',
-                uri: attributes['URI'],
+                uri: attributes['URI'] as PartialSegment['uri'],
                 byterange:
                     name === 'EXT-X-PART'
-                        ? attributes['BYTERANGE']
-                        : { length: attributes['BYTERANGE-LENGTH'], offset: attributes['BYTERANGE-START'] || 0 },
-                duration: attributes['DURATION'],
-                independent: attributes['INDEPENDENT'],
-                gap: attributes['GAP'],
+                        ? (attributes['BYTERANGE'] as ByteRange)
+                        : {
+                              length: attributes['BYTERANGE-LENGTH'] as ByteRange['length'],
+                              offset: (attributes['BYTERANGE-START'] ?? 0) as ByteRange['offset'],
+                          },
+                duration: attributes['DURATION'] as PartialSegment['duration'],
+                independent: attributes['INDEPENDENT'] as PartialSegment['independent'],
+                gap: attributes['GAP'] as PartialSegment['gap'],
             });
             segment.parts.push(partialSegment);
         }
@@ -755,10 +812,22 @@ function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuity
     return segment;
 }
 
-function parsePrefetchSegment(lines, uri, start, end, mediaSequenceNumber, discontinuitySequence, params) {
+function parsePrefetchSegment(
+    lines: Array<Line>,
+    uri: string,
+    start: number,
+    end: number,
+    mediaSequenceNumber: number,
+    discontinuitySequence: number,
+    params: ParseParams,
+): PrefetchSegment {
     const segment = new PrefetchSegment({ uri, mediaSequenceNumber, discontinuitySequence });
     for (let i = start; i <= end; i++) {
-        const { name, attributes } = lines[i];
+        const currentLine = lines[i];
+        if (typeof currentLine === 'string') {
+            continue; // Skip any uri lines
+        }
+        const { name, attributes } = currentLine;
         if (name === 'EXTINF') {
             utils.INVALIDPLAYLIST('A prefetch segment must not be advertised with an EXTINF tag.');
         } else if (name === 'EXT-X-DISCONTINUITY') {
@@ -768,11 +837,11 @@ function parsePrefetchSegment(lines, uri, start, end, mediaSequenceNumber, disco
         } else if (name === 'EXT-X-KEY') {
             setCompatibleVersionOfKey(params, attributes);
             segment.key = new Key({
-                method: attributes['METHOD'],
-                uri: attributes['URI'],
-                iv: attributes['IV'],
-                format: attributes['KEYFORMAT'],
-                formatVersion: attributes['KEYFORMATVERSIONS'],
+                method: attributes['METHOD'] as Key['method'],
+                uri: attributes['URI'] as Key['uri'],
+                iv: attributes['IV'] as Key['iv'],
+                format: attributes['KEYFORMAT'] as Key['format'],
+                formatVersion: attributes['KEYFORMATVERSIONS'] as Key['formatVersion'],
             });
         } else if (name === 'EXT-X-MAP') {
             utils.INVALIDPLAYLIST('Prefetch segments must not be advertised with an EXT-X-MAP tag.');
@@ -781,7 +850,7 @@ function parsePrefetchSegment(lines, uri, start, end, mediaSequenceNumber, disco
     return segment;
 }
 
-function parseMediaPlaylist(lines, params: ParseParams): MediaPlaylist {
+function parseMediaPlaylist(lines: Array<Line>, params: ParseParams): MediaPlaylist {
     const playlist = new MediaPlaylist();
     let segmentStart = -1;
     let mediaSequence = 0;
@@ -792,128 +861,7 @@ function parseMediaPlaylist(lines, params: ParseParams): MediaPlaylist {
     let currentMap = null;
     let containsParts = false;
     for (const [index, line] of lines.entries()) {
-        const { name, value, attributes, category } = line;
-        if (category === 'Segment') {
-            if (segmentStart === -1) {
-                segmentStart = index;
-            }
-            if (name === 'EXT-X-DISCONTINUITY') {
-                discontinuityFound = true;
-            }
-            continue;
-        }
-        if (name === 'EXT-X-VERSION') {
-            if (playlist.version === undefined) {
-                playlist.version = value;
-            } else {
-                utils.INVALIDPLAYLIST('A Playlist file MUST NOT contain more than one EXT-X-VERSION tag.');
-            }
-        } else if (name === 'EXT-X-TARGETDURATION') {
-            playlist.targetDuration = params.targetDuration = value;
-        } else if (name === 'EXT-X-MEDIA-SEQUENCE') {
-            if (playlist.segments.length > 0) {
-                utils.INVALIDPLAYLIST(
-                    'The EXT-X-MEDIA-SEQUENCE tag MUST appear before the first Media Segment in the Playlist.',
-                );
-            }
-            playlist.mediaSequenceBase = mediaSequence = value;
-        } else if (name === 'EXT-X-DISCONTINUITY-SEQUENCE') {
-            if (playlist.segments.length > 0) {
-                utils.INVALIDPLAYLIST(
-                    'The EXT-X-DISCONTINUITY-SEQUENCE tag MUST appear before the first Media Segment in the Playlist.',
-                );
-            }
-            if (discontinuityFound) {
-                utils.INVALIDPLAYLIST(
-                    'The EXT-X-DISCONTINUITY-SEQUENCE tag MUST appear before any EXT-X-DISCONTINUITY tag.',
-                );
-            }
-            playlist.discontinuitySequenceBase = discontinuitySequence = value;
-        } else if (name === 'EXT-X-ENDLIST') {
-            playlist.endlist = true;
-        } else if (name === 'EXT-X-PLAYLIST-TYPE') {
-            playlist.playlistType = value;
-        } else if (name === 'EXT-X-I-FRAMES-ONLY') {
-            if (params.compatibleVersion < 4) {
-                params.compatibleVersion = 4;
-            }
-            playlist.isIFrame = true;
-        } else if (name === 'EXT-X-INDEPENDENT-SEGMENTS') {
-            if (playlist.independentSegments) {
-                utils.INVALIDPLAYLIST('EXT-X-INDEPENDENT-SEGMENTS tag MUST NOT appear more than once in a Playlist');
-            }
-            playlist.independentSegments = true;
-        } else if (name === 'EXT-X-START') {
-            if (playlist.start) {
-                utils.INVALIDPLAYLIST('EXT-X-START tag MUST NOT appear more than once in a Playlist');
-            }
-            if (typeof attributes['TIME-OFFSET'] !== 'number') {
-                utils.INVALIDPLAYLIST('EXT-X-START: TIME-OFFSET attribute is REQUIRED');
-            }
-            playlist.start = { offset: attributes['TIME-OFFSET'], precise: attributes['PRECISE'] || false };
-        } else if (name === 'EXT-X-SERVER-CONTROL') {
-            if (!attributes['CAN-BLOCK-RELOAD']) {
-                utils.INVALIDPLAYLIST('EXT-X-SERVER-CONTROL: CAN-BLOCK-RELOAD=YES is mandatory for Low-Latency HLS');
-            }
-            playlist.lowLatencyCompatibility = {
-                canBlockReload: attributes['CAN-BLOCK-RELOAD'],
-                canSkipUntil: attributes['CAN-SKIP-UNTIL'],
-                holdBack: attributes['HOLD-BACK'],
-                partHoldBack: attributes['PART-HOLD-BACK'],
-            };
-        } else if (name === 'EXT-X-PART-INF') {
-            if (!attributes['PART-TARGET']) {
-                utils.INVALIDPLAYLIST('EXT-X-PART-INF: PART-TARGET attribute is mandatory');
-            }
-            playlist.partTargetDuration = attributes['PART-TARGET'];
-        } else if (name === 'EXT-X-RENDITION-REPORT') {
-            if (!attributes['URI']) {
-                utils.INVALIDPLAYLIST('EXT-X-RENDITION-REPORT: URI attribute is mandatory');
-            }
-            if (attributes['URI'].search(/^[a-z]+:/) === 0) {
-                utils.INVALIDPLAYLIST('EXT-X-RENDITION-REPORT: URI must be relative to the playlist uri');
-            }
-            playlist.renditionReports.push(
-                new RenditionReport({
-                    uri: attributes['URI'],
-                    lastMSN: attributes['LAST-MSN'],
-                    lastPart: attributes['LAST-PART'],
-                }),
-            );
-        } else if (name === 'EXT-X-SKIP') {
-            if (!attributes['SKIPPED-SEGMENTS']) {
-                utils.INVALIDPLAYLIST('EXT-X-SKIP: SKIPPED-SEGMENTS attribute is mandatory');
-            }
-            if (params.compatibleVersion < 9) {
-                params.compatibleVersion = 9;
-            }
-            playlist.skip = attributes['SKIPPED-SEGMENTS'];
-            mediaSequence += playlist.skip;
-        } else if (name === 'EXT-X-PREFETCH') {
-            const segment = parsePrefetchSegment(
-                lines,
-                value,
-                segmentStart === -1 ? index : segmentStart,
-                index - 1,
-                mediaSequence++,
-                discontinuitySequence,
-                params,
-            );
-            if (segment) {
-                if (segment.discontinuity) {
-                    segment.discontinuitySequence++;
-                    discontinuitySequence = segment.discontinuitySequence;
-                }
-                if (segment.key) {
-                    currentKey = segment.key;
-                } else {
-                    segment.key = currentKey;
-                }
-                playlist.prefetchSegments.push(segment);
-            }
-            prefetchFound = true;
-            segmentStart = -1;
-        } else if (typeof line === 'string') {
+        if (typeof line === 'string') {
             // uri
             if (segmentStart === -1) {
                 utils.INVALIDPLAYLIST('A URI line is not preceded by any segment tags');
@@ -949,6 +897,135 @@ function parseMediaPlaylist(lines, params: ParseParams): MediaPlaylist {
                     containsParts = true;
                 }
             }
+            segmentStart = -1;
+            continue;
+        }
+        const { name, value, attributes, category } = line;
+        if (category === 'Segment') {
+            if (segmentStart === -1) {
+                segmentStart = index;
+            }
+            if (name === 'EXT-X-DISCONTINUITY') {
+                discontinuityFound = true;
+            }
+            continue;
+        }
+
+        if (name === 'EXT-X-VERSION') {
+            if (playlist.version === undefined) {
+                playlist.version = value as Playlist['version'];
+            } else {
+                utils.INVALIDPLAYLIST('A Playlist file MUST NOT contain more than one EXT-X-VERSION tag.');
+            }
+        } else if (name === 'EXT-X-TARGETDURATION') {
+            playlist.targetDuration = params.targetDuration = value as MediaPlaylist['targetDuration'];
+        } else if (name === 'EXT-X-MEDIA-SEQUENCE') {
+            if (playlist.segments.length > 0) {
+                utils.INVALIDPLAYLIST(
+                    'The EXT-X-MEDIA-SEQUENCE tag MUST appear before the first Media Segment in the Playlist.',
+                );
+            }
+            playlist.mediaSequenceBase = mediaSequence = value as MediaPlaylist['mediaSequenceBase'];
+        } else if (name === 'EXT-X-DISCONTINUITY-SEQUENCE') {
+            if (playlist.segments.length > 0) {
+                utils.INVALIDPLAYLIST(
+                    'The EXT-X-DISCONTINUITY-SEQUENCE tag MUST appear before the first Media Segment in the Playlist.',
+                );
+            }
+            if (discontinuityFound) {
+                utils.INVALIDPLAYLIST(
+                    'The EXT-X-DISCONTINUITY-SEQUENCE tag MUST appear before any EXT-X-DISCONTINUITY tag.',
+                );
+            }
+            playlist.discontinuitySequenceBase = discontinuitySequence =
+                value as MediaPlaylist['discontinuitySequenceBase'];
+        } else if (name === 'EXT-X-ENDLIST') {
+            playlist.endlist = true;
+        } else if (name === 'EXT-X-PLAYLIST-TYPE') {
+            playlist.playlistType = value as MediaPlaylist['playlistType'];
+        } else if (name === MediaPlaylistType.IFrame || name === MediaPlaylistType.Image) {
+            if (params.compatibleVersion < 4) {
+                params.compatibleVersion = 4;
+            }
+            playlist.mediaPlaylistType = name as MediaPlaylistType;
+        } else if (name === 'EXT-X-INDEPENDENT-SEGMENTS') {
+            if (playlist.independentSegments) {
+                utils.INVALIDPLAYLIST('EXT-X-INDEPENDENT-SEGMENTS tag MUST NOT appear more than once in a Playlist');
+            }
+            playlist.independentSegments = true;
+        } else if (name === 'EXT-X-START') {
+            if (playlist.start) {
+                utils.INVALIDPLAYLIST('EXT-X-START tag MUST NOT appear more than once in a Playlist');
+            }
+            if (typeof attributes['TIME-OFFSET'] !== 'number') {
+                utils.INVALIDPLAYLIST('EXT-X-START: TIME-OFFSET attribute is REQUIRED');
+            }
+            playlist.start = {
+                offset: attributes['TIME-OFFSET'] as PlaylistStart['offset'],
+                precise: (attributes['PRECISE'] ?? false) as PlaylistStart['precise'],
+            };
+        } else if (name === 'EXT-X-SERVER-CONTROL') {
+            if (!attributes['CAN-BLOCK-RELOAD']) {
+                utils.INVALIDPLAYLIST('EXT-X-SERVER-CONTROL: CAN-BLOCK-RELOAD=YES is mandatory for Low-Latency HLS');
+            }
+            playlist.lowLatencyCompatibility = {
+                canBlockReload: attributes['CAN-BLOCK-RELOAD'] as LowLatencyCompatibility['canBlockReload'],
+                canSkipUntil: attributes['CAN-SKIP-UNTIL'] as LowLatencyCompatibility['canSkipUntil'],
+                holdBack: attributes['HOLD-BACK'] as LowLatencyCompatibility['holdBack'],
+                partHoldBack: attributes['PART-HOLD-BACK'] as LowLatencyCompatibility['partHoldBack'],
+            };
+        } else if (name === 'EXT-X-PART-INF') {
+            if (!attributes['PART-TARGET']) {
+                utils.INVALIDPLAYLIST('EXT-X-PART-INF: PART-TARGET attribute is mandatory');
+            }
+            playlist.partTargetDuration = attributes['PART-TARGET'] as MediaPlaylist['partTargetDuration'];
+        } else if (name === 'EXT-X-RENDITION-REPORT') {
+            const uri: string = attributes['URI'] as string;
+            if (!uri) {
+                utils.INVALIDPLAYLIST('EXT-X-RENDITION-REPORT: URI attribute is mandatory');
+            }
+            if (uri && uri.search(/^[a-z]+:/) === 0) {
+                utils.INVALIDPLAYLIST('EXT-X-RENDITION-REPORT: URI must be relative to the playlist uri');
+            }
+            playlist.renditionReports.push(
+                new RenditionReport({
+                    uri,
+                    lastMSN: attributes['LAST-MSN'] as RenditionReport['lastMSN'],
+                    lastPart: attributes['LAST-PART'] as RenditionReport['lastPart'],
+                }),
+            );
+        } else if (name === 'EXT-X-SKIP') {
+            if (!attributes['SKIPPED-SEGMENTS']) {
+                utils.INVALIDPLAYLIST('EXT-X-SKIP: SKIPPED-SEGMENTS attribute is mandatory');
+            }
+            if (params.compatibleVersion < 9) {
+                params.compatibleVersion = 9;
+            }
+            playlist.skip = attributes['SKIPPED-SEGMENTS'] as MediaPlaylist['skip'];
+            mediaSequence += playlist.skip;
+        } else if (name === 'EXT-X-PREFETCH') {
+            const segment = parsePrefetchSegment(
+                lines,
+                value as string,
+                segmentStart === -1 ? index : segmentStart,
+                index - 1,
+                mediaSequence++,
+                discontinuitySequence,
+                params,
+            );
+            if (segment) {
+                if (segment.discontinuity) {
+                    segment.discontinuitySequence++;
+                    discontinuitySequence = segment.discontinuitySequence;
+                }
+                if (segment.key) {
+                    currentKey = segment.key;
+                } else {
+                    segment.key = currentKey;
+                }
+                playlist.prefetchSegments.push(segment);
+            }
+            prefetchFound = true;
             segmentStart = -1;
         }
     }
@@ -1052,7 +1129,7 @@ function addSegment(
     return [segment.discontinuitySequence, segment.key, segment.map];
 }
 
-function checkDateRange(segments) {
+function checkDateRange(segments: Array<Segment>): void {
     const earliestDates = new Map();
     const rangeList = new Map();
     let hasDateRange = false;
@@ -1106,9 +1183,9 @@ function checkDateRange(segments) {
 }
 
 function checkLowLatencyCompatibility(
-    { lowLatencyCompatibility, targetDuration, partTargetDuration, segments, renditionReports },
-    containsParts,
-) {
+    { lowLatencyCompatibility, targetDuration, partTargetDuration, segments, renditionReports }: MediaPlaylist,
+    containsParts: boolean,
+): void {
     const { canSkipUntil, holdBack, partHoldBack } = lowLatencyCompatibility;
     if (canSkipUntil < targetDuration * 6) {
         utils.INVALIDPLAYLIST('The Skip Boundary must be at least six times the EXT-X-TARGETDURATION.');
@@ -1159,7 +1236,7 @@ function checkLowLatencyCompatibility(
     }
 }
 
-function CHECKTAGCATEGORY(category, params) {
+function CHECKTAGCATEGORY(category: TagCategory, params: ParseParams): void {
     if (category === 'Segment' || category === 'MediaPlaylist') {
         if (params.isMasterPlaylist === undefined) {
             params.isMasterPlaylist = false;
@@ -1201,8 +1278,8 @@ function parseTag(line: string, params: ParseParams): Tag {
     return { name, category, value, attributes };
 }
 
-function lexicalParse(text: string, params: ParseParams): LexicalLines {
-    const lines: [Tag, ...(Tag | string)[]] = [] as unknown as LexicalLines;
+function lexicalParse(text: string, params: ParseParams): Array<Line> {
+    const lines: Array<Line> = [];
     for (const l of text.split('\n')) {
         // V8 has garbage collection issues when cleaning up substrings split from strings greater
         // than 13 characters so before we continue we need to safely copy over each line so that it
@@ -1226,19 +1303,19 @@ function lexicalParse(text: string, params: ParseParams): LexicalLines {
         // uri
         lines.push(line);
     }
-    if (lines.length === 0 || lines[0].name !== 'EXTM3U') {
+    if (lines.length === 0 || (lines[0] as Tag).name !== 'EXTM3U') {
         utils.INVALIDPLAYLIST('The EXTM3U tag MUST be the first line.');
     }
     return lines;
 }
 
-function semanticParse(lines: LexicalLines, params: ParseParams): MasterPlaylist | MediaPlaylist {
+function semanticParse(lines: Array<Line>, params: ParseParams): MasterPlaylist | MediaPlaylist {
     let playlist: MasterPlaylist | MediaPlaylist;
     if (params.isMasterPlaylist) {
         playlist = parseMasterPlaylist(lines, params);
     } else {
         playlist = parseMediaPlaylist(lines, params);
-        if (!playlist.isIFrame && params.hasMap && params.compatibleVersion < 6) {
+        if (playlist.isStandardPlaylist && params.hasMap && params.compatibleVersion < 6) {
             params.compatibleVersion = 6;
         }
     }
@@ -1250,7 +1327,7 @@ function semanticParse(lines: LexicalLines, params: ParseParams): MasterPlaylist
     return playlist;
 }
 
-export function parse(text: string, customParams: UserParseParams = {}) {
+export function parse(text: string, customParams: UserParseParams = {}): MasterPlaylist | MediaPlaylist {
     const defaultParams: ParseParams = {
         version: undefined,
         isMasterPlaylist: undefined,
@@ -1266,5 +1343,21 @@ export function parse(text: string, customParams: UserParseParams = {}) {
     const lines = lexicalParse(text, params);
     const playlist = semanticParse(lines, params);
     playlist.source = text;
+    return playlist;
+}
+
+export function safeParseMaster(text: string, customParams: UserParseParams = {}): MasterPlaylist {
+    const playlist: MasterPlaylist | MediaPlaylist = parse(text, customParams);
+    if (!(playlist instanceof MasterPlaylist)) {
+        throw new Error('Playlist is not a Master Playlist');
+    }
+    return playlist;
+}
+
+export function safeParseMedia(text: string, customParams: UserParseParams = {}): MediaPlaylist {
+    const playlist: MasterPlaylist | MediaPlaylist = parse(text, customParams);
+    if (!(playlist instanceof MediaPlaylist)) {
+        throw new Error('Playlist is not a Media Playlist');
+    }
     return playlist;
 }

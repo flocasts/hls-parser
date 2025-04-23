@@ -1,18 +1,20 @@
 import * as utils from '../utils';
 
 export type SpliceTypes = 'OUT' | 'IN' | 'RAW';
-export type SpliceTagNames =
-    | 'EXT-X-CUE-OUT-CONT'
-    | 'EXT-X-CUE-OUT-CONT'
-    | 'EXT-OATCLS-SCTE35'
-    | 'EXT-X-ASSET'
-    | 'EXT-X-SCTE35'
-    | 'EXT-X-CUE';
+export type SpliceTagNames = 'EXT-X-CUE-OUT-CONT' | 'EXT-OATCLS-SCTE35' | 'EXT-X-ASSET' | 'EXT-X-SCTE35' | 'EXT-X-CUE';
+
+export interface TransmitSpliceValue {
+    AdFormat: string; // 'pip'
+    MaxDuration: number;
+    KeepCreativeAudio: boolean;
+    InsertionType: string; // 'scte'
+}
+
 export interface SpliceInfoProperties {
     type: SpliceTypes;
     duration?: number;
     tagName?: SpliceTagNames;
-    value?: string;
+    value?: string | TransmitSpliceValue;
     adProviderSpecificTag?: string;
 }
 
@@ -27,7 +29,7 @@ export class SpliceInfo implements SpliceInfoProperties {
     public type: SpliceTypes;
     public duration?: number;
     public tagName?: SpliceTagNames;
-    public value?: string;
+    public value?: string | TransmitSpliceValue;
     public adProviderSpecificTag?: string;
 
     constructor({

@@ -1,12 +1,20 @@
 import Segment from './Segment';
 import PrefetchSegment from './PrefetchSegment';
 import RenditionReport from './RenditionReport';
-import Playlist, { PlaylistProperties, PlaylistConstructorProperties } from './Playlist';
+import Playlist, { PlaylistConstructorProperties, PlaylistProperties } from './Playlist';
+import { SegmentIterator } from './SegmentIterator';
+import SegmentTransformer from '../transformers/SegmentTransformer';
+
+export enum MediaPlaylistType {
+    Standard = 'STANDARD',
+    IFrame = 'EXT-X-I-FRAMES-ONLY',
+    Image = 'EXT-X-IMAGES-ONLY',
+}
 
 export interface LowLatencyCompatibility {
     canBlockReload: boolean;
     canSkipUntil: number;
-    holdBack?: boolean;
+    holdBack?: number;
     partHoldBack: number;
 }
 
@@ -16,7 +24,7 @@ export interface MediaPlaylistProperties extends PlaylistProperties {
     discontinuitySequenceBase: number;
     endlist: boolean;
     playlistType: string;
-    isIFrame: boolean;
+    mediaPlaylistType: MediaPlaylistType;
     segments: Segment[];
     prefetchSegments: PrefetchSegment[];
     lowLatencyCompatibility: LowLatencyCompatibility;
@@ -38,22 +46,23 @@ export type MediaPlaylistOptionalConstructorProperties = Partial<
         | 'skip'
         | 'targetDuration'
         | 'playlistType'
-        | 'isIFrame'
+        | 'mediaPlaylistType'
         | 'lowLatencyCompatibility'
         | 'partTargetDuration'
         | 'hash'
     >
 >;
+
 export type MediaPlaylistConstructorProperties = Omit<PlaylistConstructorProperties, 'isMasterPlaylist'> &
     MediaPlaylistOptionalConstructorProperties;
 
-export class MediaPlaylist extends Playlist implements MediaPlaylistProperties {
+export class MediaPlaylist extends Playlist implements MediaPlaylistProperties, Iterable<Segment> {
     public targetDuration: number;
     public mediaSequenceBase: number;
     public discontinuitySequenceBase: number;
     public endlist: boolean;
     public playlistType: string;
-    public isIFrame: boolean;
+    public mediaPlaylistType: MediaPlaylistType;
     public segments: Segment[];
     public prefetchSegments: PrefetchSegment[];
     public lowLatencyCompatibility: LowLatencyCompatibility;
@@ -71,7 +80,7 @@ export class MediaPlaylist extends Playlist implements MediaPlaylistProperties {
             discontinuitySequenceBase = 0,
             endlist = false,
             playlistType,
-            isIFrame,
+            mediaPlaylistType,
             segments = [],
             prefetchSegments = [],
             lowLatencyCompatibility,
@@ -85,7 +94,7 @@ export class MediaPlaylist extends Playlist implements MediaPlaylistProperties {
         this.discontinuitySequenceBase = discontinuitySequenceBase;
         this.endlist = endlist;
         this.playlistType = playlistType;
-        this.isIFrame = isIFrame;
+        this.mediaPlaylistType = mediaPlaylistType ?? MediaPlaylistType.Standard;
         this.segments = segments;
         this.prefetchSegments = prefetchSegments;
         this.lowLatencyCompatibility = lowLatencyCompatibility;
@@ -93,6 +102,26 @@ export class MediaPlaylist extends Playlist implements MediaPlaylistProperties {
         this.renditionReports = renditionReports;
         this.skip = skip;
         this.hash = hash;
+    }
+
+    [Symbol.iterator](): SegmentIterator {
+        return new SegmentIterator(this.segments);
+    }
+
+    segmentIterator(transformer?: SegmentTransformer): SegmentIterator {
+        return new SegmentIterator(this.segments, transformer);
+    }
+
+    get isStandardPlaylist(): boolean {
+        return this.mediaPlaylistType === MediaPlaylistType.Standard;
+    }
+
+    get isIFramePlaylist(): boolean {
+        return this.mediaPlaylistType === MediaPlaylistType.IFrame;
+    }
+
+    get isImagePlaylist(): boolean {
+        return this.mediaPlaylistType === MediaPlaylistType.Image;
     }
 }
 

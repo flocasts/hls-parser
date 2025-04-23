@@ -1,4 +1,4 @@
-import { MasterPlaylist, Variant } from '../../../src/types';
+import { MasterPlaylist, Variant, VariantType } from '../../../src/types';
 
 const playlist = new MasterPlaylist({
     variants: createVariants(),
@@ -16,7 +16,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'low/iframe.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 86000,
             codecs: 'avc1.640029',
         }),
@@ -31,7 +31,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'mid/iframe.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 150000,
             codecs: 'avc1.640029',
         }),
@@ -46,7 +46,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'hi/iframe.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 550000,
             codecs: 'avc1.640029',
         }),

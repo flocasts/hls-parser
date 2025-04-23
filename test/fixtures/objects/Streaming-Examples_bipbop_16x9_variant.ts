@@ -1,4 +1,4 @@
-import { MasterPlaylist, Variant, Rendition } from '../../../src/types';
+import { MasterPlaylist, Rendition, Variant, VariantType } from '../../../src/types';
 
 const renditions = {
     bipbop_audio: [
@@ -131,7 +131,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'gear1/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 28451,
             codecs: 'avc1.4d400d',
         }),
@@ -149,7 +149,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'gear2/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 181534,
             codecs: 'avc1.4d401e',
         }),
@@ -167,7 +167,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'gear3/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 297056,
             codecs: 'avc1.4d401f',
         }),
@@ -185,7 +185,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'gear4/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 339492,
             codecs: 'avc1.4d401f',
         }),
@@ -203,7 +203,7 @@ function createVariants() {
     variants.push(
         new Variant({
             uri: 'gear5/iframe_index.m3u8',
-            isIFrameOnly: true,
+            variantType: VariantType.IFrame,
             bandwidth: 669554,
             codecs: 'avc1.4d401f',
         }),

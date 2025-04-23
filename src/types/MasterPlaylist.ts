@@ -16,7 +16,7 @@ export type MasterPlaylistOptionalConstructorProperties = Partial<
 export type MasterPlaylistConstructorProperties = Omit<PlaylistConstructorProperties, 'isMasterPlaylist'> &
     MasterPlaylistOptionalConstructorProperties;
 
-export class MasterPlaylist extends Playlist implements MasterPlaylistProperties {
+export class MasterPlaylist extends Playlist implements MasterPlaylistProperties, Iterable<Variant> {
     public variants: Variant[];
     public currentVariant: Variant;
     public sessionDataList: SessionData[];
@@ -30,6 +30,10 @@ export class MasterPlaylist extends Playlist implements MasterPlaylistProperties
         this.currentVariant = currentVariant;
         this.sessionDataList = sessionDataList;
         this.sessionKeyList = sessionKeyList;
+    }
+
+    [Symbol.iterator](): Iterator<Variant> {
+        return this.variants[Symbol.iterator]();
     }
 }
 
